@@ -350,6 +350,24 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 </div>
 <p style="color:#888;font-size:11px">数据存储在 GitHub Issues 中，所有人都可以访问历史记录</p>
 </div>
+
+<div style="background:#1a2a4e;border:1px solid #e8a838;border-radius:6px;padding:10px;margin-bottom:10px">
+<h3 style="color:#e8a838;margin-top:0">GitHub Token 设置</h3>
+<p style="color:#888;font-size:11px;margin-bottom:8px">同步数据需要 GitHub Personal Access Token。获取方式：</p>
+<ol style="color:#888;font-size:11px;margin-bottom:10px;padding-left:16px">
+<li>访问 <a href="https://github.com/settings/tokens" target="_blank" style="color:#17a2b8">github.com/settings/tokens</a></li>
+<li>点击 "Generate new token (classic)"</li>
+<li>勾选 "repo" 权限</li>
+<li>生成后复制 token 到下方输入框</li>
+</ol>
+<div class="form-group">
+<label>GitHub Token</label>
+<input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxx" value="">
+</div>
+<button class="btn btn-success" onclick="saveGitHubToken()" style="width:100%">保存 Token</button>
+<div id="tokenStatus" style="text-align:center;margin-top:6px;font-size:11px;color:#888"></div>
+</div>
+
 <div style="display:flex;gap:6px;margin-bottom:10px">
 <button class="btn btn-success" onclick="syncToCloud()">同步当前数据到云端</button>
 <button class="btn btn-info" onclick="loadFromCloud()">从云端加载数据</button>
@@ -369,6 +387,8 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 const GITHUB_OWNER = 'ziyuddu2';
 const GITHUB_REPO = 'oil-reaction-station';
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
+// GitHub Personal Access Token - 用户需要在登录后设置
+let GITHUB_TOKEN = localStorage.getItem('github_token') || '';
 
 // ===== DATA STRUCTURES =====
 const stageData = {};
@@ -450,10 +470,19 @@ async function syncToCloud(){
   const body = '```json\n' + JSON.stringify(data, null, 2) + '\n```';
   
   try{
-    // 使用 GitHub API 创建 Issue（不需要 token，因为是公开仓库）
+    // 检查是否有 token
+    if(!GITHUB_TOKEN){
+      showStatus('请先设置 GitHub Token（点击云端数据页面）','error');
+      return;
+    }
+    
+    // 使用 GitHub API 创建 Issue（需要 token 认证）
     const res = await fetch(`${GITHUB_API}/issues`, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `token ${GITHUB_TOKEN}`
+      },
       body: JSON.stringify({title, body, labels: ['data-backup']})
     });
     
@@ -996,6 +1025,30 @@ function clearAll(){
   showStatus('所有数据已清空','success');
 }
 
+// ===== GITHUB TOKEN MANAGEMENT =====
+function saveGitHubToken(){
+  const token = document.getElementById('githubTokenInput').value.trim();
+  if(!token){showStatus('请输入 Token','error');return;}
+  if(!token.startsWith('ghp_') && !token.startsWith('gho_')){
+    showStatus('Token 格式不正确，应以 ghp_ 或 gho_ 开头','warning');
+    return;
+  }
+  GITHUB_TOKEN = token;
+  localStorage.setItem('github_token', token);
+  document.getElementById('tokenStatus').innerHTML = '<span style="color:#28a745">✓ Token 已保存</span>';
+  showStatus('GitHub Token 已保存','success');
+  checkCloudConnection();
+}
+
+function loadGitHubToken(){
+  const token = localStorage.getItem('github_token');
+  if(token){
+    GITHUB_TOKEN = token;
+    document.getElementById('githubTokenInput').value = token;
+    document.getElementById('tokenStatus').innerHTML = '<span style="color:#28a745">✓ Token 已加载</span>';
+  }
+}
+
 // ===== INIT =====
 window.onload=function(){
   document.getElementById('productionDate').valueAsDate=new Date();
@@ -1003,6 +1056,7 @@ window.onload=function(){
   if(saved){currentUser=saved;document.getElementById('loginUsername').value=saved;}
   showUserList();
   loadUserData();
+  loadGitHubToken();
   checkCloudConnection();
 };
 </script>
