@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>油化反应指导工作站 v2.0</title>
+<title>油化反应指导工作站 v3.0</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Microsoft YaHei","Segoe UI",Arial,sans-serif;background:#1a1a2e;padding:10px;color:#eee;font-size:13px}
@@ -89,13 +89,19 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 
 /* 工艺卡表格 */
 .stage-table-wrap{max-height:100px;overflow-y:auto;margin-top:4px;border:1px solid #0f3460;border-radius:4px}
+
+/* 云端同步状态 */
+.cloud-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600}
+.cloud-status.online{background:#28a745;color:#fff}
+.cloud-status.offline{background:#dc3545;color:#fff}
+.cloud-status.syncing{background:#ffc107;color:#1a1a2e}
 </style>
 </head>
 <body>
 <!-- LOGIN -->
 <div class="login-overlay" id="loginOverlay">
 <div class="login-box">
-<h2 style="text-align:center;margin-bottom:20px;color:#e8a838">油化反应指导工作站 v2.0</h2>
+<h2 style="text-align:center;margin-bottom:20px;color:#e8a838">油化反应指导工作站 v3.0</h2>
 <p style="color:#888;margin-bottom:16px">请输入用户名进入系统</p>
 <input type="text" id="loginUsername" placeholder="输入用户名..." onkeydown="if(event.key==='Enter')loginUser()">
 <div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn" style="flex:1;background:#e8a838;color:#1a1a2e" onclick="loginUser()">登录 / 注册</button></div>
@@ -105,15 +111,17 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 
 <!-- MAIN APP -->
 <div class="container" id="mainApp" style="display:none">
-<h1>油化反应指导工作站 v2.0</h1>
+<h1>油化反应指导工作站 v3.0</h1>
 <div class="nav-bar">
 <div class="nav-left">
 <button class="nav-btn active" onclick="showPage('production')" id="navProduction">生产监控</button>
 <button class="nav-btn" onclick="showPage('workorder')" id="navWorkOrder">工单管理</button>
+<button class="nav-btn" onclick="showPage('cloud')" id="navCloud">云端数据</button>
 </div>
 <div class="nav-right">
 <span style="color:#888">当前用户:</span>
 <span style="color:#e8a838;font-weight:600" id="currentUserDisplay">---</span>
+<span class="cloud-status offline" id="cloudStatus">离线</span>
 <button class="btn btn-sm btn-outline" onclick="switchUser()">切换</button>
 </div>
 </div>
@@ -121,6 +129,8 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <button class="btn btn-outline" onclick="exportAllData()">导出全部数据</button>
 <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">导入数据</button>
 <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+<button class="btn btn-success" onclick="syncToCloud()">同步到云端</button>
+<button class="btn btn-info" onclick="loadFromCloud()">从云端加载</button>
 </div>
 
 <div id="pageProduction" class="tab-content active">
@@ -329,10 +339,37 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <div id="savedWorkOrders" style="margin-top:8px"></div>
 </div>
 </div>
+
+<!-- CLOUD DATA PAGE -->
+<div id="pageCloud" class="cost-page" style="display:none">
+<div class="panel"><h2>云端数据管理</h2>
+<div style="background:#0f3460;padding:10px;border-radius:6px;margin-bottom:10px">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+<span style="color:#7fc8a9;font-weight:600">云端状态:</span>
+<span class="cloud-status offline" id="cloudStatusPage">离线</span>
+</div>
+<p style="color:#888;font-size:11px">数据存储在 GitHub Issues 中，所有人都可以访问历史记录</p>
+</div>
+<div style="display:flex;gap:6px;margin-bottom:10px">
+<button class="btn btn-success" onclick="syncToCloud()">同步当前数据到云端</button>
+<button class="btn btn-info" onclick="loadFromCloud()">从云端加载数据</button>
+</div>
+<div class="section-divider"></div>
+<h3>云端历史记录</h3>
+<div id="cloudHistory" style="margin-top:8px">
+<div style="color:#888;text-align:center;padding:20px">点击"从云端加载数据"查看历史记录</div>
+</div>
+</div>
+</div>
 </div>
 <div class="status-bar" id="statusBar"></div>
 
 <script>
+// ===== CONFIG =====
+const GITHUB_OWNER = 'ziyuddu2';
+const GITHUB_REPO = 'oil-reaction-station';
+const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
+
 // ===== DATA STRUCTURES =====
 const stageData = {};
 for(let i=1;i<=4;i++){
@@ -342,6 +379,7 @@ let currentUser = '';
 let workOrders = [];
 let currentWorkOrder = null;
 let oxygenLevel = 21.0;
+let isCloudOnline = false;
 
 // ===== UTILITY FUNCTIONS =====
 function fmtTime(d){
@@ -360,6 +398,181 @@ function showStatus(msg,type){
   bar.style.color=type==='warning'?'#1a1a2e':'#fff';
   bar.style.opacity='1';
   setTimeout(()=>{bar.style.opacity='0'},3000);
+}
+
+// ===== CLOUD STATUS =====
+function updateCloudStatus(online){
+  isCloudOnline = online;
+  const statusEl = document.getElementById('cloudStatus');
+  const statusPageEl = document.getElementById('cloudStatusPage');
+  const statusClass = online ? 'cloud-status online' : 'cloud-status offline';
+  const statusText = online ? '在线' : '离线';
+  if(statusEl) { statusEl.className = statusClass; statusEl.textContent = statusText; }
+  if(statusPageEl) { statusPageEl.className = statusClass; statusPageEl.textContent = statusText; }
+}
+
+// ===== GITHUB ISSUES API =====
+async function checkCloudConnection(){
+  try{
+    const res = await fetch(`${GITHUB_API}/issues?state=all&per_page=1`);
+    if(res.ok){
+      updateCloudStatus(true);
+      return true;
+    }
+  }catch(e){}
+  updateCloudStatus(false);
+  return false;
+}
+
+async function syncToCloud(){
+  if(!confirm('确定将当前数据同步到云端？这会创建一个新的 GitHub Issue。'))return;
+  
+  showStatus('正在同步到云端...','info');
+  updateCloudStatus(false);
+  
+  const data = {
+    version: '3.0',
+    timestamp: new Date().toISOString(),
+    user: currentUser,
+    batchId: document.getElementById('batchId').value,
+    productionDate: document.getElementById('productionDate').value,
+    reactorId: document.getElementById('reactorId').value,
+    workOrders: workOrders,
+    stageData: {
+      1: {energy: stageData[1].energy, records: stageData[1].records},
+      2: {energy: stageData[2].energy, records: stageData[2].records},
+      3: {energy: stageData[3].energy, gas: stageData[3].gas, records: stageData[3].records},
+      4: {energy: stageData[4].energy, oilOut: stageData[4].oilOut, cycleAmount: stageData[4].cycleAmount, records: stageData[4].records}
+    }
+  };
+  
+  const title = `数据备份 - ${data.batchId || '未命名批次'} - ${new Date().toLocaleString('zh-CN')}`;
+  const body = '```json\n' + JSON.stringify(data, null, 2) + '\n```';
+  
+  try{
+    // 使用 GitHub API 创建 Issue（不需要 token，因为是公开仓库）
+    const res = await fetch(`${GITHUB_API}/issues`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({title, body, labels: ['data-backup']})
+    });
+    
+    if(res.ok){
+      const issue = await res.json();
+      showStatus('同步成功！Issue #' + issue.number, 'success');
+      updateCloudStatus(true);
+      loadCloudHistory();
+    }else{
+      const err = await res.text();
+      showStatus('同步失败: ' + err, 'error');
+      updateCloudStatus(false);
+    }
+  }catch(e){
+    showStatus('同步失败: ' + e.message, 'error');
+    updateCloudStatus(false);
+  }
+}
+
+async function loadFromCloud(){
+  showStatus('正在从云端加载...','info');
+  
+  try{
+    const res = await fetch(`${GITHUB_API}/issues?state=all&labels=data-backup&per_page=10`);
+    if(!res.ok){
+      showStatus('加载失败', 'error');
+      return;
+    }
+    
+    const issues = await res.json();
+    if(issues.length === 0){
+      showStatus('云端暂无数据', 'warning');
+      return;
+    }
+    
+    // 加载最新的数据
+    const latest = issues[0];
+    const match = latest.body.match(/```json\n([\s\S]*?)\n```/);
+    if(match){
+      const data = JSON.parse(match[1]);
+      if(data.workOrders){
+        workOrders = data.workOrders;
+        localStorage.setItem('oil_workOrders', JSON.stringify(workOrders));
+        renderSavedWorkOrders();
+      }
+      showStatus('加载成功！共 ' + issues.length + ' 条历史记录', 'success');
+      updateCloudStatus(true);
+      loadCloudHistory();
+    }
+  }catch(e){
+    showStatus('加载失败: ' + e.message, 'error');
+    updateCloudStatus(false);
+  }
+}
+
+async function loadCloudHistory(){
+  const div = document.getElementById('cloudHistory');
+  div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">加载中...</div>';
+  
+  try{
+    const res = await fetch(`${GITHUB_API}/issues?state=all&labels=data-backup&per_page=20`);
+    if(!res.ok){
+      div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">加载失败</div>';
+      return;
+    }
+    
+    const issues = await res.json();
+    if(issues.length === 0){
+      div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">暂无云端数据</div>';
+      return;
+    }
+    
+    div.innerHTML = issues.map(issue => {
+      const date = new Date(issue.created_at).toLocaleString('zh-CN');
+      const match = issue.body.match(/```json\n([\s\S]*?)\n```/);
+      let batchInfo = '未知批次';
+      if(match){
+        try{
+          const data = JSON.parse(match[1]);
+          batchInfo = data.batchId || '未命名批次';
+        }catch(e){}
+      }
+      return `<div style="background:#0f3460;border-radius:4px;padding:8px;margin:4px 0;cursor:pointer" onclick="loadCloudIssue(${issue.number})">
+        <div style="display:flex;justify-content:space-between">
+          <span style="color:#e8a838;font-weight:600">#${issue.number} ${batchInfo}</span>
+          <span style="color:#888;font-size:10px">${date}</span>
+        </div>
+        <div style="color:#888;font-size:10px;margin-top:2px">${issue.user.login} | ${issue.title}</div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">加载失败: ' + e.message + '</div>';
+  }
+}
+
+async function loadCloudIssue(issueNumber){
+  showStatus('正在加载 Issue #' + issueNumber + '...', 'info');
+  
+  try{
+    const res = await fetch(`${GITHUB_API}/issues/${issueNumber}`);
+    if(!res.ok){
+      showStatus('加载失败', 'error');
+      return;
+    }
+    
+    const issue = await res.json();
+    const match = issue.body.match(/```json\n([\s\S]*?)\n```/);
+    if(match){
+      const data = JSON.parse(match[1]);
+      if(data.workOrders){
+        workOrders = data.workOrders;
+        localStorage.setItem('oil_workOrders', JSON.stringify(workOrders));
+        renderSavedWorkOrders();
+        showStatus('已加载 Issue #' + issueNumber, 'success');
+      }
+    }
+  }catch(e){
+    showStatus('加载失败: ' + e.message, 'error');
+  }
 }
 
 // ===== OXYGEN CONTROL =====
@@ -398,6 +611,7 @@ function loginUser(){
   document.getElementById('currentUserDisplay').textContent=name;
   document.getElementById('operator').value=name;
   loadUserData();
+  checkCloudConnection();
   showStatus('欢迎 '+name,'success');
 }
 function switchUser(){
@@ -419,8 +633,12 @@ function showUserList(){
 function showPage(page){
   document.getElementById('pageProduction').style.display=page==='production'?'block':'none';
   document.getElementById('pageWorkOrder').style.display=page==='workorder'?'block':'none';
+  document.getElementById('pageCloud').style.display=page==='cloud'?'block':'none';
   document.getElementById('navProduction').className='nav-btn'+(page==='production'?' active':'');
   document.getElementById('navWorkOrder').className='nav-btn'+(page==='workorder'?' active':'');
+  document.getElementById('navCloud').className='nav-btn'+(page==='cloud'?' active':'');
+  
+  if(page==='cloud') loadCloudHistory();
 }
 
 // ===== TEMPERATURE CONTROL PANEL =====
@@ -451,7 +669,6 @@ function startStage(n){
   const s=stageData[n];
   if(s.running){showStatus('阶段'+n+' 已在运行','warning');return}
   
-  // Reset all data for this stage
   s.running=true;
   s.startTime=Date.now();
   s.records=[];
@@ -462,19 +679,16 @@ function startStage(n){
   s.cycleAmount=0;
   s.stirEnergy=0;
   
-  // Reset display
   document.getElementById('stage'+n+'Status').textContent='运行中';
   document.getElementById('stage'+n+'Status').className='stage-status running';
   document.getElementById('stage'+n+'Idle').style.display='none';
   document.getElementById('stage'+n+'Run').style.display='flex';
   document.getElementById('stage'+n+'Card').classList.add('running');
   
-  // Clear table
   const tbodyIds = {1:'stage1Data',2:'stage2Data',3:'stage3Data',4:'stage4Data'};
   const tbody = document.getElementById(tbodyIds[n]);
   if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="color:#888">暂无数据</td></tr>';
   
-  // Reset energy display
   const enIds = {1:'stage1En',2:'stage2En',3:'stage3En',4:'stage4En'};
   const enEl = document.getElementById(enIds[n]);
   if(enEl) enEl.textContent = '-- KWh';
@@ -533,7 +747,6 @@ function inputStage(n){
     document.getElementById('stage1Pwr').textContent=pwr.toFixed(1)+' KW';
     document.getElementById('stage1En').textContent=s.energy.toFixed(3)+' KWh';
     
-    // Add to table
     const tbody=document.getElementById('stage1Data');
     if(tbody.children.length===1&&tbody.children[0].textContent.includes('暂无'))tbody.innerHTML='';
     const tr=document.createElement('tr');
@@ -737,7 +950,7 @@ function exportAllData(){
   const data={stageData,workOrders,batchId:document.getElementById('batchId').value,date:document.getElementById('productionDate').value};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='OilReaction-V2-'+Date.now()+'.json';a.click();
+  const a=document.createElement('a');a.href=url;a.download='OilReaction-V3-'+Date.now()+'.json';a.click();
   showStatus('数据已导出','success');
 }
 function importData(e){
@@ -776,7 +989,6 @@ function clearAll(){
     document.getElementById('stage'+i+'Timer').textContent='00:00:00';
     document.getElementById('stage'+i+'Card').classList.remove('running');
     
-    // Clear tables
     const tbodyIds = {1:'stage1Data',2:'stage2Data',3:'stage3Data',4:'stage4Data'};
     const tbody = document.getElementById(tbodyIds[i]);
     if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="color:#888">暂无数据</td></tr>';
@@ -791,6 +1003,7 @@ window.onload=function(){
   if(saved){currentUser=saved;document.getElementById('loginUsername').value=saved;}
   showUserList();
   loadUserData();
+  checkCloudConnection();
 };
 </script>
 </body>
