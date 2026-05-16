@@ -1033,8 +1033,8 @@ function clearAll(){
 function saveGitHubToken(){
   const token = document.getElementById('githubTokenInput').value.trim();
   if(!token){showStatus('请输入 Token','error');return;}
-  if(!token.startsWith('ghp_') && !token.startsWith('gho_')){
-    showStatus('Token 格式不正确，应以 ghp_ 或 gho_ 开头','warning');
+  if(!token.startsWith('ghp_') && !token.startsWith('gho_') && !token.startsWith('github_pat_')){
+    showStatus('Token 格式不正确，应以 ghp_、gho_ 或 github_pat_ 开头','warning');
     return;
   }
   GITHUB_TOKEN = token;
