@@ -485,7 +485,7 @@ async function syncToCloud(){
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `token ${GITHUB_TOKEN}`
+        'Authorization': `Bearer ${GITHUB_TOKEN}`
       },
       body: JSON.stringify({title, body, labels: ['data-backup']})
     });
