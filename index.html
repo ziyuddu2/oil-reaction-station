@@ -938,6 +938,9 @@ function saveWorkOrder(){
   renderSavedWorkOrders();
   showStatus('工单已保存: '+batchId,'success');
   
+  // 自动导出到文件
+  autoExportToFile();
+  
   // 自动同步到云端
   if(GITHUB_TOKEN){
     syncToCloud();
@@ -1059,9 +1062,8 @@ function loadGitHubToken(){
   }
 }
 
-// ===== AUTO SAVE & EXPORT =====
+// ===== AUTO SAVE =====
 let autoSaveTimer=null;
-let autoExportTimer=null;
 
 function startAutoSave(){
   if(autoSaveTimer) clearInterval(autoSaveTimer);
@@ -1082,13 +1084,7 @@ function saveToLocal(){
   showStatus('自动保存完成','info');
 }
 
-function startAutoExport(){
-  if(autoExportTimer) clearInterval(autoExportTimer);
-  autoExportTimer=setInterval(()=>{
-    autoExportToFile();
-  },30000);
-}
-
+// ===== AUTO EXPORT (triggered on save work order) =====
 function autoExportToFile(){
   const data={
     stageData:stageData,
@@ -1133,7 +1129,6 @@ window.onload=function(){
   
   // 启动自动功能
   startAutoSave();
-  startAutoExport();
   setInterval(updateClock,1000);
   updateClock();
   
