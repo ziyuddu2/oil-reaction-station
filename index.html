@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>油化反应指导工作站 v3.0</title>
+<title>油化反应指导工作站v3.0</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Microsoft YaHei","Segoe UI",Arial,sans-serif;background:#1a1a2e;padding:10px;color:#eee;font-size:13px}
@@ -77,128 +77,182 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 .summary-table td,.summary-table th{padding:2px 4px;border:1px solid #0f3460;text-align:center}
 .io-panel{display:flex;gap:6px;margin-bottom:8px}
 
-/* 含氧量控制 */
+/* 鍚哀閲忔帶鍒?*/
 .oxygen-control{display:flex;align-items:center;gap:8px;justify-content:center;margin:6px 0;padding:6px;background:#0f3460;border-radius:6px}
 .oxygen-btn{width:32px;height:32px;border-radius:50%;border:none;font-size:18px;font-weight:700;cursor:pointer;background:#e8a838;color:#1a1a2e;line-height:1}
 .oxygen-btn:hover{background:#ffc107}
 .oxygen-value{font-size:20px;font-weight:700;color:#e8a838;min-width:60px;text-align:center}
 .oxygen-label{font-size:10px;color:#888}
 
-/* 温差显示 */
+/* 娓╁樊鏄剧ず */
 .temp-diff-box{background:#1a3a5c;border-radius:6px;padding:6px;margin:4px 0;text-align:center;border:1px solid #e8a838}
 .temp-diff-value{font-size:18px;font-weight:700;color:#ffc107}
 .temp-diff-label{font-size:10px;color:#888}
 
-/* 工艺卡表格 */
+/* 宸ヨ壓鍗¤〃鏍?*/
 .stage-table-wrap{max-height:100px;overflow-y:auto;margin-top:4px;border:1px solid #0f3460;border-radius:4px}
 
-/* 云端同步状态 */
+/* 浜戠鍚屾鐘舵€?*/
 .cloud-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600}
 .cloud-status.online{background:#28a745;color:#fff}
 .cloud-status.offline{background:#dc3545;color:#fff}
 .cloud-status.syncing{background:#ffc107;color:#1a1a2e}
+
+/* 涓婚鍒囨崲 */
+[data-theme="light"]{--bg-primary:#f5f5f5;--bg-secondary:#ffffff;--text-primary:#333333;--text-secondary:#666666;--accent:#d4891a;--border:#dddddd;--card-bg:#ffffff}
+[data-theme="light"] body{background:#f5f5f5;color:#333}
+[data-theme="light"] .panel{background:#fff;border-color:#ddd}
+[data-theme="light"] .stage-card{background:#fff;border-color:#ddd}
+[data-theme="light"] .metric-card{background:#f0f0f0}
+[data-theme="light"] .data-table th{background:#f0f0f0;color:#333}
+[data-theme="light"] .data-table td{border-color:#ddd;color:#333}
+[data-theme="light"] .nav-btn{background:#e0e0e0;color:#666}
+[data-theme="light"] .nav-btn.active{background:#d4891a;color:#fff}
+
+/* 鍔ㄧ敾鏁堟灉 */
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(40,167,69,0.4)}70%{box-shadow:0 0 0 10px rgba(40,167,69,0)}100%{box-shadow:0 0 0 0 rgba(40,167,69,0)}}
+.stage-card.running{animation:pulse 2s infinite}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.metric-value{background:linear-gradient(90deg,#e8a838,#ffc107,#e8a838);background-size:200% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
 </style>
 </head>
 <body>
 <!-- LOGIN -->
 <div class="login-overlay" id="loginOverlay">
 <div class="login-box">
-<h2 style="text-align:center;margin-bottom:20px;color:#e8a838">油化反应指导工作站 v3.0</h2>
-<p style="color:#888;margin-bottom:16px">请输入用户名进入系统</p>
-<input type="text" id="loginUsername" placeholder="输入用户名..." onkeydown="if(event.key==='Enter')loginUser()">
-<div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn" style="flex:1;background:#e8a838;color:#1a1a2e" onclick="loginUser()">登录 / 注册</button></div>
+<h2 style="text-align:center;margin-bottom:20px;color:#e8a838">娌瑰寲鍙嶅簲鎸囧宸ヤ綔绔?v3.0</h2>
+<p style="color:#888;margin-bottom:16px">璇疯緭鍏ョ敤鎴峰悕杩涘叆绯荤粺</p>
+<input type="text" id="loginUsername" placeholder="杈撳叆鐢ㄦ埛鍚?.." onkeydown="if(event.key==='Enter')loginUser()">
+<div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn" style="flex:1;background:#e8a838;color:#1a1a2e" onclick="loginUser()">鐧诲綍 / 娉ㄥ唽</button></div>
 <div id="userList" class="user-list"></div>
-<p style="color:#555;font-size:10px;margin-top:10px">新用户自动注册，数据保存在本地浏览器</p>
+<p style="color:#555;font-size:10px;margin-top:10px">鏂扮敤鎴疯嚜鍔ㄦ敞鍐岋紝鏁版嵁淇濆瓨鍦ㄦ湰鍦版祻瑙堝櫒</p>
 </div></div>
 
 <!-- MAIN APP -->
 <div class="container" id="mainApp" style="display:none">
-<h1>油化反应指导工作站 v3.0</h1>
+<h1>娌瑰寲鍙嶅簲鎸囧宸ヤ綔绔?v3.0</h1>
+<div style="display:flex;gap:10px;margin-bottom:10px;align-items:center">
+<div style="flex:1;background:#16213e;border-radius:8px;padding:10px;border:1px solid #0f3460">
+<div style="display:flex;justify-content:space-around;align-items:center">
+<div style="text-align:center">
+<div style="width:80px;height:80px;border-radius:50%;border:4px solid #0f3460;position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto">
+<div style="position:absolute;width:80px;height:80px;border-radius:50%;border:4px solid transparent;border-top-color:#e8a838;transform:rotate(0deg);transition:transform 0.5s" id="tempGauge"></div>
+<span style="font-size:18px;font-weight:700;color:#e8a838" id="gaugeTemp">--</span>
+</div>
+<div style="font-size:10px;color:#7fc8a9;margin-top:4px">娓╁害 C</div>
+</div>
+<div style="text-align:center">
+<div style="width:80px;height:80px;border-radius:50%;border:4px solid #0f3460;position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto">
+<div style="position:absolute;width:80px;height:80px;border-radius:50%;border:4px solid transparent;border-top-color:#17a2b8;transform:rotate(0deg);transition:transform 0.5s" id="pressureGauge"></div>
+<span style="font-size:18px;font-weight:700;color:#17a2b8" id="gaugePressure">--</span>
+</div>
+<div style="font-size:10px;color:#7fc8a9;margin-top:4px">鍘嬪姏 MPa</div>
+</div>
+<div style="text-align:center">
+<div style="width:80px;height:80px;border-radius:50%;border:4px solid #0f3460;position:relative;display:flex;align-items:center;justify-content:center;margin:0 auto">
+<div style="position:absolute;width:80px;height:80px;border-radius:50%;border:4px solid transparent;border-top-color:#28a745;transform:rotate(0deg);transition:transform 0.5s" id="progressGauge"></div>
+<span style="font-size:18px;font-weight:700;color:#28a745" id="gaugeProgress">--</span>
+</div>
+<div style="font-size:10px;color:#7fc8a9;margin-top:4px">杩涘害 %</div>
+</div>
+</div>
+</div>
+<div style="width:200px;background:#16213e;border-radius:8px;padding:10px;border:1px solid #0f3460">
+<h3 style="color:#e8a838;margin-top:0;font-size:12px">缁存姢鎻愰啋</h3>
+<div id="maintenanceAlerts" style="font-size:11px;color:#888">
+<div style="padding:4px 0;border-bottom:1px dashed #0f3460">鍙嶅簲閲? 姝ｅ父</div>
+<div style="padding:4px 0;border-bottom:1px dashed #0f3460">娉? 姝ｅ父</div>
+<div style="padding:4px 0">鍔犵儹鍣? 姝ｅ父</div>
+</div>
+</div>
+</div>
 <div class="nav-bar">
 <div class="nav-left">
-<button class="nav-btn active" onclick="showPage('production')" id="navProduction">生产监控</button>
-<button class="nav-btn" onclick="showPage('workorder')" id="navWorkOrder">工单管理</button>
-<button class="nav-btn" onclick="showPage('cloud')" id="navCloud">云端数据</button>
+<button class="nav-btn active" onclick="showPage('production')" id="navProduction">鐢熶骇鐩戞帶</button>
+<button class="nav-btn" onclick="showPage('dashboard')" id="navDashboard">浠〃鐩?/button>
+<button class="nav-btn" onclick="showPage('workorder')" id="navWorkOrder">宸ュ崟绠＄悊</button>
+<button class="nav-btn" onclick="showPage('cloud')" id="navCloud">浜戠鏁版嵁</button>
 </div>
 <div class="nav-right">
 <span style="color:#7fc8a9;font-family:'Courier New',monospace;font-size:13px" id="liveClock">----</span>
-<span style="color:#888">当前用户:</span>
+<span style="color:#888">褰撳墠鐢ㄦ埛:</span>
 <span style="color:#e8a838;font-weight:600" id="currentUserDisplay">---</span>
-<span class="cloud-status offline" id="cloudStatus">离线</span>
-<button class="btn btn-sm btn-outline" onclick="switchUser()">切换</button>
+<span class="cloud-status offline" id="cloudStatus">绂荤嚎</span>
+<button class="btn btn-sm btn-outline" onclick="toggleTheme()" title="鍒囨崲涓婚"><span id="themeIcon">鈽€锔?/span></button>
+<button class="btn btn-sm btn-outline" onclick="switchUser()">鍒囨崲</button>
 </div>
 </div>
 <div class="io-panel">
-<button class="btn btn-outline" onclick="exportAllData()">导出全部数据</button>
-<button class="btn btn-outline" onclick="document.getElementById('importFile').click()">导入数据</button>
+<button class="btn btn-outline" onclick="exportAllData()">瀵煎嚭鍏ㄩ儴鏁版嵁</button>
+<button class="btn btn-outline" onclick="document.getElementById('importFile').click()">瀵煎叆鏁版嵁</button>
 <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
-<button class="btn btn-success" onclick="syncToCloud()">同步到云端</button>
-<button class="btn btn-info" onclick="loadFromCloud()">从云端加载</button>
+<button class="btn btn-success" onclick="syncToCloud()">鍚屾鍒颁簯绔?/button>
+<button class="btn btn-info" onclick="loadFromCloud()">浠庝簯绔姞杞?/button>
 </div>
 
 <div id="pageProduction" class="tab-content active">
 <div class="main-grid">
 <!-- LEFT PANEL -->
 <div class="left-panel">
-<div class="panel"><h2>批次信息</h2>
-<div class="form-row"><div class="form-group"><label>批次编号</label><input type="text" id="batchId" placeholder="YH-20260424-001"></div><div class="form-group"><label>生产日期</label><input type="date" id="productionDate"></div></div>
-<div class="form-row"><div class="form-group"><label>反应器编号</label><input type="text" id="reactorId" placeholder="R-01"></div><div class="form-group"><label>操作人员</label><input type="text" id="operator" readonly style="background:#0f3460;color:#888"></div></div>
-<div class="form-group"><label>生产备注</label><textarea id="batchRemark" rows="2" placeholder="批次特殊说明..."></textarea></div>
+<div class="panel"><h2>鎵规淇℃伅</h2>
+<div class="form-row"><div class="form-group"><label>鎵规缂栧彿</label><input type="text" id="batchId" placeholder="YH-20260424-001"></div><div class="form-group"><label>鐢熶骇鏃ユ湡</label><input type="date" id="productionDate"></div></div>
+<div class="form-row"><div class="form-group"><label>鍙嶅簲鍣ㄧ紪鍙?/label><input type="text" id="reactorId" placeholder="R-01"></div><div class="form-group"><label>鎿嶄綔浜哄憳</label><input type="text" id="operator" readonly style="background:#0f3460;color:#888"></div></div>
+<div class="form-group"><label>鐢熶骇澶囨敞</label><textarea id="batchRemark" rows="2" placeholder="鎵规鐗规畩璇存槑..."></textarea></div>
 </div>
 
-<div class="panel"><h2>工单内容显示</h2>
+<div class="panel"><h2>宸ュ崟鍐呭鏄剧ず</h2>
 <div id="workOrderDisplay" class="work-order-display">
-<div style="color:#888;text-align:center;padding:10px">暂无工单数据，请在"工单管理"页面导入或录入</div>
+<div style="color:#888;text-align:center;padding:10px">鏆傛棤宸ュ崟鏁版嵁锛岃鍦?宸ュ崟绠＄悊"椤甸潰瀵煎叆鎴栧綍鍏?/div>
 </div>
 </div>
 
-<div class="panel"><h2>总体工艺卡</h2>
-<div style="background:#0f3460;padding:5px 8px;border-radius:4px;margin:6px 0;font-weight:600;color:#7fc8a9;font-size:11px">电能记录</div>
-<div class="form-row"><div class="form-group"><label>电表初始 (KWh)</label><input type="number" id="powerMeterStart" step="0.001" placeholder="0.000"></div><div class="form-group"><label>电表终末 (KWh)</label><input type="number" id="powerMeterEnd" step="0.001" placeholder="0.000"></div></div>
-<button class="btn btn-info" onclick="calcMeterDiff()" style="width:100%;margin-top:4px">计算用电量</button>
-<div style="text-align:center;padding:4px;font-size:14px;font-weight:700" id="meterDiffDisp"><span style="color:#888">用电量: -- KWh</span></div>
-<div style="background:#0f3460;padding:5px 8px;border-radius:4px;margin:6px 0;font-weight:600;color:#7fc8a9;font-size:11px">分项用电量</div>
-<table class="summary-table"><thead><tr><th>项目</th><th>用电量(KWh)</th></tr></thead><tbody id="energyBreakdown"></tbody></table>
+<div class="panel"><h2>鎬讳綋宸ヨ壓鍗?/h2>
+<div style="background:#0f3460;padding:5px 8px;border-radius:4px;margin:6px 0;font-weight:600;color:#7fc8a9;font-size:11px">鐢佃兘璁板綍</div>
+<div class="form-row"><div class="form-group"><label>鐢佃〃鍒濆 (KWh)</label><input type="number" id="powerMeterStart" step="0.001" placeholder="0.000"></div><div class="form-group"><label>鐢佃〃缁堟湯 (KWh)</label><input type="number" id="powerMeterEnd" step="0.001" placeholder="0.000"></div></div>
+<button class="btn btn-info" onclick="calcMeterDiff()" style="width:100%;margin-top:4px">璁＄畻鐢ㄧ數閲?/button>
+<div style="text-align:center;padding:4px;font-size:14px;font-weight:700" id="meterDiffDisp"><span style="color:#888">鐢ㄧ數閲? -- KWh</span></div>
+<div style="background:#0f3460;padding:5px 8px;border-radius:4px;margin:6px 0;font-weight:600;color:#7fc8a9;font-size:11px">鍒嗛」鐢ㄧ數閲?/div>
+<table class="summary-table"><thead><tr><th>椤圭洰</th><th>鐢ㄧ數閲?KWh)</th></tr></thead><tbody id="energyBreakdown"></tbody></table>
 </div>
 
-<div class="panel"><h2>产出数据</h2>
-<div class="form-row"><div class="form-group"><label>产品重量 (kg)</label><input type="number" id="productWeight" step="0.001" placeholder="0.000"></div><div class="form-group"><label>取样重量 (g)</label><input type="number" id="sampleWeight" step="0.1" placeholder="0.0"></div></div>
-<div class="form-row"><div class="form-group"><label>实验室处理后 (g)</label><input type="number" id="labWeight" step="0.01" placeholder="0.00"></div><div class="form-group"><label>反应电流 (Ah)</label><input type="number" id="reactionAh" step="1" placeholder="0"></div></div>
-<button class="btn btn-info" onclick="calculateOutput()" style="width:100%">计算产出</button>
+<div class="panel"><h2>浜у嚭鏁版嵁</h2>
+<div class="form-row"><div class="form-group"><label>浜у搧閲嶉噺 (kg)</label><input type="number" id="productWeight" step="0.001" placeholder="0.000"></div><div class="form-group"><label>鍙栨牱閲嶉噺 (g)</label><input type="number" id="sampleWeight" step="0.1" placeholder="0.0"></div></div>
+<div class="form-row"><div class="form-group"><label>瀹為獙瀹ゅ鐞嗗悗 (g)</label><input type="number" id="labWeight" step="0.01" placeholder="0.00"></div><div class="form-group"><label>鍙嶅簲鐢垫祦 (Ah)</label><input type="number" id="reactionAh" step="1" placeholder="0"></div></div>
+<button class="btn btn-info" onclick="calculateOutput()" style="width:100%">璁＄畻浜у嚭</button>
 </div>
 
-<div class="panel"><div style="display:flex;gap:4px"><button class="btn btn-success" onclick="exportAllData()" style="flex:1">导出</button><button class="btn btn-warning" onclick="clearAll()" style="flex:1">清空</button></div></div>
+<div class="panel"><div style="display:flex;gap:4px"><button class="btn btn-success" onclick="exportAllData()" style="flex:1">瀵煎嚭</button><button class="btn btn-warning" onclick="clearAll()" style="flex:1">娓呯┖</button></div></div>
 </div>
 
 <!-- RIGHT PANEL -->
 <div class="right-panel">
-<div class="panel"><h2>实时生产指标</h2>
-<div class="batch-info"><span style="color:#888">批次:</span> <span style="color:#e8a838;font-weight:600" id="dispBatchId">-</span> <span style="color:#888">日期:</span> <span style="color:#e8a838;font-weight:600" id="dispDate">-</span> <span style="color:#888">反应器:</span> <span style="color:#e8a838;font-weight:600" id="dispReactor">-</span> <span style="color:#888">操作员:</span> <span style="color:#e8a838;font-weight:600" id="dispOperator">-</span></div>
+<div class="panel"><h2>瀹炴椂鐢熶骇鎸囨爣</h2>
+<div class="batch-info"><span style="color:#888">鎵规:</span> <span style="color:#e8a838;font-weight:600" id="dispBatchId">-</span> <span style="color:#888">鏃ユ湡:</span> <span style="color:#e8a838;font-weight:600" id="dispDate">-</span> <span style="color:#888">鍙嶅簲鍣?</span> <span style="color:#e8a838;font-weight:600" id="dispReactor">-</span> <span style="color:#888">鎿嶄綔鍛?</span> <span style="color:#e8a838;font-weight:600" id="dispOperator">-</span></div>
 <div class="metrics-grid">
-<div class="metric-card"><div class="metric-value" id="totalEnergy">--</div><div class="metric-label">总能耗 KWh</div></div>
-<div class="metric-card"><div class="metric-value" id="totalDuration">--</div><div class="metric-label">总时长 h</div></div>
-<div class="metric-card"><div class="metric-value" id="avgTempRate">--</div><div class="metric-label">平均温升率 C/min</div></div>
-<div class="metric-card"><div class="metric-value" id="productYield">--</div><div class="metric-label">产品重量 kg</div></div>
-<div class="metric-card"><div class="metric-value" id="energyPerKg">--</div><div class="metric-label">单位能耗 KWh/kg</div></div>
-<div class="metric-card"><div class="metric-value" id="maxTemp">--</div><div class="metric-label">最高温度 C</div></div>
+<div class="metric-card"><div class="metric-value" id="totalEnergy">--</div><div class="metric-label">鎬昏兘鑰?KWh</div></div>
+<div class="metric-card"><div class="metric-value" id="totalDuration">--</div><div class="metric-label">鎬绘椂闀?h</div></div>
+<div class="metric-card"><div class="metric-value" id="avgTempRate">--</div><div class="metric-label">骞冲潎娓╁崌鐜?C/min</div></div>
+<div class="metric-card"><div class="metric-value" id="productYield">--</div><div class="metric-label">浜у搧閲嶉噺 kg</div></div>
+<div class="metric-card"><div class="metric-value" id="energyPerKg">--</div><div class="metric-label">鍗曚綅鑳借€?KWh/kg</div></div>
+<div class="metric-card"><div class="metric-value" id="maxTemp">--</div><div class="metric-label">鏈€楂樻俯搴?C</div></div>
 </div>
 </div>
 
-<!-- 温度升降总控平台 -->
+<!-- 娓╁害鍗囬檷鎬绘帶骞冲彴 -->
 <div class="panel temp-control-panel">
-<h2 style="color:#e8a838;margin-top:0">温度升降总控平台</h2>
+<h2 style="color:#e8a838;margin-top:0">娓╁害鍗囬檷鎬绘帶骞冲彴</h2>
 <div class="temp-display">
 <div class="temp-display-item">
 <div class="temp-display-value" id="currentTempDisplay">--</div>
-<div class="temp-display-label">当前温度 (C)</div>
+<div class="temp-display-label">褰撳墠娓╁害 (C)</div>
 </div>
 <div class="temp-display-item">
-<div class="temp-arrow" id="tempArrow">↑</div>
-<div class="temp-display-label" id="tempTrend">升温中</div>
+<div class="temp-arrow" id="tempArrow">鈫?/div>
+<div class="temp-display-label" id="tempTrend">鍗囨俯涓?/div>
 </div>
 <div class="temp-display-item">
 <div class="temp-display-value" id="targetTempDisplay">--</div>
-<div class="temp-display-label">目标温度 (C)</div>
+<div class="temp-display-label">鐩爣娓╁害 (C)</div>
 </div>
 </div>
 <div class="progress-bar">
@@ -206,181 +260,217 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <div class="progress-text" id="tempProgressText">0%</div>
 </div>
 <div class="form-row">
-<div class="form-group"><label>上温度 (C)</label><input type="number" id="upperTemp" step="0.1" placeholder="0" oninput="updateTempDisplay()"></div>
-<div class="form-group"><label>下温度 (C)</label><input type="number" id="lowerTemp" step="0.1" placeholder="0" oninput="updateTempDisplay()"></div>
+<div class="form-group"><label>涓婃俯搴?(C)</label><input type="number" id="upperTemp" step="0.1" placeholder="0" oninput="updateTempDisplay()"></div>
+<div class="form-group"><label>涓嬫俯搴?(C)</label><input type="number" id="lowerTemp" step="0.1" placeholder="0" oninput="updateTempDisplay()"></div>
 </div>
 <div class="form-row">
-<div class="form-group"><label>目标温度 (C)</label><input type="number" id="targetTemp" step="0.1" placeholder="500" oninput="updateTempDisplay()"></div>
-<div class="form-group"><label>温升率 (C/min)</label><input type="number" id="tempRateInput" step="0.1" placeholder="0" readonly style="background:#0f3460;color:#888"></div>
+<div class="form-group"><label>鐩爣娓╁害 (C)</label><input type="number" id="targetTemp" step="0.1" placeholder="500" oninput="updateTempDisplay()"></div>
+<div class="form-group"><label>娓╁崌鐜?(C/min)</label><input type="number" id="tempRateInput" step="0.1" placeholder="0" readonly style="background:#0f3460;color:#888"></div>
 </div>
 </div>
 
 <div class="stage-grid">
 
-<!-- S1: 加热工艺 -->
+<!-- S1: 鍔犵儹宸ヨ壓 -->
 <div class="stage-card" id="stage1Card">
-<div class="stage-title">加热工艺</div>
-<div class="stage-status idle" id="stage1Status">未开始</div>
+<div class="stage-title">鍔犵儹宸ヨ壓</div>
+<div class="stage-status idle" id="stage1Status">鏈紑濮?/div>
 <div class="timer" id="stage1Timer">00:00:00</div>
-<div class="form-group"><label>环境温度 (C)</label><input type="number" id="stage1EnvTemp" step="0.1" placeholder="25.0"></div>
+<div class="form-group"><label>鐜娓╁害 (C)</label><input type="number" id="stage1EnvTemp" step="0.1" placeholder="25.0"></div>
 <div class="form-row">
-<div class="form-group"><label>上温度 (C)</label><input type="number" id="stage1UpperTemp" step="0.1" placeholder="0" oninput="updateStage1Diff()"></div>
-<div class="form-group"><label>下温度 (C)</label><input type="number" id="stage1LowerTemp" step="0.1" placeholder="0" oninput="updateStage1Diff()"></div>
+<div class="form-group"><label>涓婃俯搴?(C)</label><input type="number" id="stage1UpperTemp" step="0.1" placeholder="0" oninput="updateStage1Diff()"></div>
+<div class="form-group"><label>涓嬫俯搴?(C)</label><input type="number" id="stage1LowerTemp" step="0.1" placeholder="0" oninput="updateStage1Diff()"></div>
 </div>
 <div class="temp-diff-box">
 <div class="temp-diff-value" id="stage1Diff">--</div>
-<div class="temp-diff-label">温差 (上温 - 下温) C</div>
+<div class="temp-diff-label">娓╁樊 (涓婃俯 - 涓嬫俯) C</div>
 </div>
-<div class="form-group"><label>终点温度 (C)</label><input type="number" id="stage1TargetTemp" step="0.1" placeholder="500" oninput="updateTempDisplay()"></div>
-<div class="form-group"><label>加热功率 (KW)</label><input type="number" id="stage1Power" step="0.1" placeholder="50"></div>
-<div class="form-group"><label>电流 (A)</label><input type="number" id="stage1Current" step="0.1" placeholder="110"></div>
-<div class="form-group"><label>频率 (Hz)</label><input type="number" id="stage1Freq" step="0.1" placeholder="10.5"></div>
-<div class="data-row"><span class="data-label">实时功率:</span><span class="data-value" id="stage1Pwr">-- KW</span></div>
-<div class="data-row"><span class="data-label">累计能耗:</span><span class="data-value hl" id="stage1En">-- KWh</span></div>
-<div class="data-row"><span class="data-label">实时能耗:</span><span class="data-value" id="stage1LiveEn" style="color:#17a2b8">-- KWh</span></div>
-<div class="btns" id="stage1Idle"><button class="btn btn-start" onclick="startStage(1)" style="flex:1">工艺开始</button></div>
-<div class="btns" id="stage1Run" style="display:none"><button class="btn btn-input" onclick="inputStage(1)" style="flex:1">输入数据</button><button class="btn btn-stop" onclick="stopStage(1)" style="flex:1">工艺停止</button></div>
+<div class="form-group"><label>缁堢偣娓╁害 (C)</label><input type="number" id="stage1TargetTemp" step="0.1" placeholder="500" oninput="updateTempDisplay()"></div>
+<div class="form-group"><label>鍔犵儹鍔熺巼 (KW)</label><input type="number" id="stage1Power" step="0.1" placeholder="50"></div>
+<div class="form-group"><label>鐢垫祦 (A)</label><input type="number" id="stage1Current" step="0.1" placeholder="110"></div>
+<div class="form-group"><label>棰戠巼 (Hz)</label><input type="number" id="stage1Freq" step="0.1" placeholder="10.5"></div>
+<div class="data-row"><span class="data-label">瀹炴椂鍔熺巼:</span><span class="data-value" id="stage1Pwr">-- KW</span></div>
+<div class="data-row"><span class="data-label">绱鑳借€?</span><span class="data-value hl" id="stage1En">-- KWh</span></div>
+<div class="data-row"><span class="data-label">瀹炴椂鑳借€?</span><span class="data-value" id="stage1LiveEn" style="color:#17a2b8">-- KWh</span></div>
+<div class="btns" id="stage1Idle"><button class="btn btn-start" onclick="startStage(1)" style="flex:1">宸ヨ壓寮€濮?/button></div>
+<div class="btns" id="stage1Run" style="display:none"><button class="btn btn-input" onclick="inputStage(1)" style="flex:1">杈撳叆鏁版嵁</button><button class="btn btn-stop" onclick="stopStage(1)" style="flex:1">宸ヨ壓鍋滄</button></div>
 <div class="stage-table-wrap">
-<table class="data-table"><thead><tr><th>时间</th><th>上温</th><th>下温</th><th>温差</th><th>功率</th><th>能耗</th></tr></thead><tbody id="stage1Data"><tr><td colspan="6" style="color:#888">暂无数据</td></tr></tbody></table>
+<table class="data-table"><thead><tr><th>鏃堕棿</th><th>涓婃俯</th><th>涓嬫俯</th><th>娓╁樊</th><th>鍔熺巼</th><th>鑳借€?/th></tr></thead><tbody id="stage1Data"><tr><td colspan="6" style="color:#888">鏆傛棤鏁版嵁</td></tr></tbody></table>
 </div>
-<div style="background:#1a3a5c;border-radius:4px;padding:4px;margin:3px 0;text-align:center"><div style="color:#888;font-size:10px">温度上升率</div><div style="font-size:13px;font-weight:700;color:#ffc107" id="tempRate">-- C/min</div><div style="color:#888;font-size:10px;margin-top:3px">预计到温时间</div><div style="font-size:13px;font-weight:700;color:#ffc107" id="etaTime">--</div></div>
-<div class="energy-box" id="stage1Box" style="display:none;background:#1a2a4e;border-radius:4px;padding:4px 6px;margin:3px 0;font-size:10px"><span style="color:#888">加热能耗: </span><span id="stage1Val">--</span></div>
+<div style="background:#1a3a5c;border-radius:4px;padding:4px;margin:3px 0;text-align:center"><div style="color:#888;font-size:10px">娓╁害涓婂崌鐜?/div><div style="font-size:13px;font-weight:700;color:#ffc107" id="tempRate">-- C/min</div><div style="color:#888;font-size:10px;margin-top:3px">棰勮鍒版俯鏃堕棿</div><div style="font-size:13px;font-weight:700;color:#ffc107" id="etaTime">--</div></div>
+<div class="energy-box" id="stage1Box" style="display:none;background:#1a2a4e;border-radius:4px;padding:4px 6px;margin:3px 0;font-size:10px"><span style="color:#888">鍔犵儹鑳借€? </span><span id="stage1Val">--</span></div>
 </div>
 
-<!-- S2: 保温工艺 -->
+<!-- S2: 淇濇俯宸ヨ壓 -->
 <div class="stage-card" id="stage2Card">
-<div class="stage-title">保温工艺</div>
-<div class="stage-status idle" id="stage2Status">未开始</div>
+<div class="stage-title">淇濇俯宸ヨ壓</div>
+<div class="stage-status idle" id="stage2Status">鏈紑濮?/div>
 <div class="timer" id="stage2Timer">00:00:00</div>
-<div class="form-group"><label>保温功率 (KW)</label><input type="number" id="stage2Power" step="0.1" placeholder="输入保温功率"></div>
-<div class="form-group"><label>保温温度 (C)</label><input type="number" id="stage2HoldTemp" step="0.1" placeholder="420"></div>
+<div class="form-group"><label>淇濇俯鍔熺巼 (KW)</label><input type="number" id="stage2Power" step="0.1" placeholder="杈撳叆淇濇俯鍔熺巼"></div>
+<div class="form-group"><label>淇濇俯娓╁害 (C)</label><input type="number" id="stage2HoldTemp" step="0.1" placeholder="420"></div>
 <div class="form-row">
-<div class="form-group"><label>上温度 (C)</label><input type="number" id="stage2UpperTemp" step="0.1" placeholder="0" oninput="updateStage2Diff()"></div>
-<div class="form-group"><label>下温度 (C)</label><input type="number" id="stage2LowerTemp" step="0.1" placeholder="0" oninput="updateStage2Diff()"></div>
+<div class="form-group"><label>涓婃俯搴?(C)</label><input type="number" id="stage2UpperTemp" step="0.1" placeholder="0" oninput="updateStage2Diff()"></div>
+<div class="form-group"><label>涓嬫俯搴?(C)</label><input type="number" id="stage2LowerTemp" step="0.1" placeholder="0" oninput="updateStage2Diff()"></div>
 </div>
 <div class="temp-diff-box">
 <div class="temp-diff-value" id="stage2Diff">--</div>
-<div class="temp-diff-label">温差 (上温 - 下温) C</div>
+<div class="temp-diff-label">娓╁樊 (涓婃俯 - 涓嬫俯) C</div>
 </div>
-<div class="data-row"><span class="data-label">实时功率:</span><span class="data-value" id="stage2Pwr">-- KW</span></div>
-<div class="data-row"><span class="data-label">累计能耗:</span><span class="data-value hl" id="stage2En">-- KWh</span></div>
-<div class="data-row"><span class="data-label">实时能耗:</span><span class="data-value" id="stage2LiveEn" style="color:#17a2b8">-- KWh</span></div>
-<div class="btns" id="stage2Idle"><button class="btn btn-start" onclick="startStage(2)" style="flex:1">工艺开始</button></div>
-<div class="btns" id="stage2Run" style="display:none"><button class="btn btn-input" onclick="inputStage(2)" style="flex:1">输入数据</button><button class="btn btn-stop" onclick="stopStage(2)" style="flex:1">工艺停止</button></div>
+<div class="data-row"><span class="data-label">瀹炴椂鍔熺巼:</span><span class="data-value" id="stage2Pwr">-- KW</span></div>
+<div class="data-row"><span class="data-label">绱鑳借€?</span><span class="data-value hl" id="stage2En">-- KWh</span></div>
+<div class="data-row"><span class="data-label">瀹炴椂鑳借€?</span><span class="data-value" id="stage2LiveEn" style="color:#17a2b8">-- KWh</span></div>
+<div class="btns" id="stage2Idle"><button class="btn btn-start" onclick="startStage(2)" style="flex:1">宸ヨ壓寮€濮?/button></div>
+<div class="btns" id="stage2Run" style="display:none"><button class="btn btn-input" onclick="inputStage(2)" style="flex:1">杈撳叆鏁版嵁</button><button class="btn btn-stop" onclick="stopStage(2)" style="flex:1">宸ヨ壓鍋滄</button></div>
 <div class="stage-table-wrap">
-<table class="data-table"><thead><tr><th>时间</th><th>上温</th><th>下温</th><th>温差</th><th>功率</th><th>时长</th><th>能耗</th></tr></thead><tbody id="stage2Data"><tr><td colspan="7" style="color:#888">暂无数据</td></tr></tbody></table>
+<table class="data-table"><thead><tr><th>鏃堕棿</th><th>涓婃俯</th><th>涓嬫俯</th><th>娓╁樊</th><th>鍔熺巼</th><th>鏃堕暱</th><th>鑳借€?/th></tr></thead><tbody id="stage2Data"><tr><td colspan="7" style="color:#888">鏆傛棤鏁版嵁</td></tr></tbody></table>
 </div>
-<div class="energy-box" id="stage2Box" style="display:none;background:#1a2a4e;border-radius:4px;padding:4px 6px;margin:3px 0;font-size:10px"><span style="color:#888">保温能耗: </span><span id="stage2Val">--</span></div>
+<div class="energy-box" id="stage2Box" style="display:none;background:#1a2a4e;border-radius:4px;padding:4px 6px;margin:3px 0;font-size:10px"><span style="color:#888">淇濇俯鑳借€? </span><span id="stage2Val">--</span></div>
 </div>
 
-<!-- S3: 换气工艺 -->
+<!-- S3: 鎹㈡皵宸ヨ壓 -->
 <div class="stage-card" id="stage3Card">
-<div class="stage-title">换气工艺</div>
-<div class="stage-status idle" id="stage3Status">未开始</div>
+<div class="stage-title">鎹㈡皵宸ヨ壓</div>
+<div class="stage-status idle" id="stage3Status">鏈紑濮?/div>
 <div class="timer" id="stage3Timer">00:00:00</div>
-<div class="form-group"><label>气体流量 (L/min)</label><input type="number" id="stage3GasFlow" step="0.1" placeholder="0"></div>
-<div class="form-group"><label>泵功率 (KW)</label><input type="number" id="stage3PumpPower" step="0.1" placeholder="0"></div>
-<div class="form-group"><label>压力 (MPa)</label><input type="number" id="stage3Pressure" step="0.001" placeholder="0"></div>
-<div class="form-group"><label>压差 (MPa)</label><input type="number" id="stage3PressureDiff" step="0.001" placeholder="0"></div>
+<div class="form-group"><label>姘斾綋娴侀噺 (L/min)</label><input type="number" id="stage3GasFlow" step="0.1" placeholder="0"></div>
+<div class="form-group"><label>娉靛姛鐜?(KW)</label><input type="number" id="stage3PumpPower" step="0.1" placeholder="0"></div>
+<div class="form-group"><label>鍘嬪姏 (MPa)</label><input type="number" id="stage3Pressure" step="0.001" placeholder="0"></div>
+<div class="form-group"><label>鍘嬪樊 (MPa)</label><input type="number" id="stage3PressureDiff" step="0.001" placeholder="0"></div>
 <div class="oxygen-control">
 <button class="oxygen-btn" onclick="adjustOxygen(-1)">-</button>
-<div><div class="oxygen-value" id="oxygenValue">21.0</div><div class="oxygen-label">含氧量 %</div></div>
+<div><div class="oxygen-value" id="oxygenValue">21.0</div><div class="oxygen-label">鍚哀閲?%</div></div>
 <button class="oxygen-btn" onclick="adjustOxygen(1)">+</button>
 </div>
-<div class="data-row"><span class="data-label">瞬时气量:</span><span class="data-value" id="stage3Gi">-- kg/min</span></div>
-<div class="data-row"><span class="data-label">累计气量:</span><span class="data-value hl" id="stage3Ga">-- L (-- kg)</span></div>
-<div class="data-row"><span class="data-label">实时功率:</span><span class="data-value" id="stage3Pwr">-- KW</span></div>
-<div class="data-row"><span class="data-label">累计能耗:</span><span class="data-value hl" id="stage3En">-- KWh</span></div>
-<div class="btns" id="stage3Idle"><button class="btn btn-start" onclick="startStage(3)" style="flex:1">工艺开始</button></div>
-<div class="btns" id="stage3Run" style="display:none"><button class="btn btn-input" onclick="inputStage(3)" style="flex:1">输入数据</button><button class="btn btn-stop" onclick="stopStage(3)" style="flex:1">工艺停止</button></div>
+<div class="data-row"><span class="data-label">鐬椂姘旈噺:</span><span class="data-value" id="stage3Gi">-- kg/min</span></div>
+<div class="data-row"><span class="data-label">绱姘旈噺:</span><span class="data-value hl" id="stage3Ga">-- L (-- kg)</span></div>
+<div class="data-row"><span class="data-label">瀹炴椂鍔熺巼:</span><span class="data-value" id="stage3Pwr">-- KW</span></div>
+<div class="data-row"><span class="data-label">绱鑳借€?</span><span class="data-value hl" id="stage3En">-- KWh</span></div>
+<div class="btns" id="stage3Idle"><button class="btn btn-start" onclick="startStage(3)" style="flex:1">宸ヨ壓寮€濮?/button></div>
+<div class="btns" id="stage3Run" style="display:none"><button class="btn btn-input" onclick="inputStage(3)" style="flex:1">杈撳叆鏁版嵁</button><button class="btn btn-stop" onclick="stopStage(3)" style="flex:1">宸ヨ壓鍋滄</button></div>
 <div class="stage-table-wrap">
-<table class="data-table"><thead><tr><th>时间</th><th>气量</th><th>压力</th><th>压差</th><th>含氧量</th><th>能耗</th></tr></thead><tbody id="stage3Data"><tr><td colspan="6" style="color:#888">暂无数据</td></tr></tbody></table>
+<table class="data-table"><thead><tr><th>鏃堕棿</th><th>姘旈噺</th><th>鍘嬪姏</th><th>鍘嬪樊</th><th>鍚哀閲?/th><th>鑳借€?/th></tr></thead><tbody id="stage3Data"><tr><td colspan="6" style="color:#888">鏆傛棤鏁版嵁</td></tr></tbody></table>
 </div>
 </div>
 
-<!-- S4: 出油循环工艺 -->
+<!-- S4: 鍑烘补寰幆宸ヨ壓 -->
 <div class="stage-card" id="stage4Card">
-<div class="stage-title">出油循环工艺</div>
-<div class="stage-status idle" id="stage4Status">未开始</div>
+<div class="stage-title">鍑烘补寰幆宸ヨ壓</div>
+<div class="stage-status idle" id="stage4Status">鏈紑濮?/div>
 <div class="timer" id="stage4Timer">00:00:00</div>
-<div class="form-row"><div class="form-group"><label>出油温度 (C)</label><input type="number" id="stage4Temp" step="0.1" placeholder="0"></div><div class="form-group"><label>循环温度 (C)</label><input type="number" id="stage4CycleTemp" step="0.1" placeholder="0"></div></div>
-<div class="form-row"><div class="form-group"><label>转速 (rpm)</label><input type="number" id="stage4RPM" step="1" placeholder="0"></div><div class="form-group"><label>搅拌速度 (rpm)</label><input type="number" id="stage4Stir" step="1" placeholder="0"></div></div>
-<div class="form-row"><div class="form-group"><label>出油量 (L)</label><input type="number" id="stage4OilOut" step="0.1" placeholder="0"></div><div class="form-group"><label>循环量 (L)</label><input type="number" id="stage4CycleAmount" step="0.1" placeholder="0"></div></div>
-<div class="form-group"><label>搅拌功率 (KW)</label><input type="number" id="stage4SPwr" step="0.1" value="2"></div>
-<div class="data-row"><span class="data-label">出油累计:</span><span class="data-value hl" id="stage4OilTotal">-- L</span></div>
-<div class="data-row"><span class="data-label">循环累计:</span><span class="data-value" id="stage4CycleTotal">-- L</span></div>
-<div class="data-row"><span class="data-label">搅拌能耗:</span><span class="data-value" id="stage4Se">-- KWh</span></div>
-<div class="data-row"><span class="data-label">实时功率:</span><span class="data-value" id="stage4Pwr">-- KW</span></div>
-<div class="data-row"><span class="data-label">累计能耗:</span><span class="data-value hl" id="stage4En">-- KWh</span></div>
-<div class="btns" id="stage4Idle"><button class="btn btn-start" onclick="startStage(4)" style="flex:1">工艺开始</button></div>
-<div class="btns" id="stage4Run" style="display:none"><button class="btn btn-input" onclick="inputStage(4)" style="flex:1">输入数据</button><button class="btn btn-stop" onclick="stopStage(4)" style="flex:1">工艺停止</button></div>
+<div class="form-row"><div class="form-group"><label>鍑烘补娓╁害 (C)</label><input type="number" id="stage4Temp" step="0.1" placeholder="0"></div><div class="form-group"><label>寰幆娓╁害 (C)</label><input type="number" id="stage4CycleTemp" step="0.1" placeholder="0"></div></div>
+<div class="form-row"><div class="form-group"><label>杞€?(rpm)</label><input type="number" id="stage4RPM" step="1" placeholder="0"></div><div class="form-group"><label>鎼呮媽閫熷害 (rpm)</label><input type="number" id="stage4Stir" step="1" placeholder="0"></div></div>
+<div class="form-row"><div class="form-group"><label>鍑烘补閲?(L)</label><input type="number" id="stage4OilOut" step="0.1" placeholder="0"></div><div class="form-group"><label>寰幆閲?(L)</label><input type="number" id="stage4CycleAmount" step="0.1" placeholder="0"></div></div>
+<div class="form-group"><label>鎼呮媽鍔熺巼 (KW)</label><input type="number" id="stage4SPwr" step="0.1" value="2"></div>
+<div class="data-row"><span class="data-label">鍑烘补绱:</span><span class="data-value hl" id="stage4OilTotal">-- L</span></div>
+<div class="data-row"><span class="data-label">寰幆绱:</span><span class="data-value" id="stage4CycleTotal">-- L</span></div>
+<div class="data-row"><span class="data-label">鎼呮媽鑳借€?</span><span class="data-value" id="stage4Se">-- KWh</span></div>
+<div class="data-row"><span class="data-label">瀹炴椂鍔熺巼:</span><span class="data-value" id="stage4Pwr">-- KW</span></div>
+<div class="data-row"><span class="data-label">绱鑳借€?</span><span class="data-value hl" id="stage4En">-- KWh</span></div>
+<div class="btns" id="stage4Idle"><button class="btn btn-start" onclick="startStage(4)" style="flex:1">宸ヨ壓寮€濮?/button></div>
+<div class="btns" id="stage4Run" style="display:none"><button class="btn btn-input" onclick="inputStage(4)" style="flex:1">杈撳叆鏁版嵁</button><button class="btn btn-stop" onclick="stopStage(4)" style="flex:1">宸ヨ壓鍋滄</button></div>
 <div class="stage-table-wrap">
-<table class="data-table"><thead><tr><th>时间</th><th>出油温</th><th>循环温</th><th>出油量</th><th>循环量</th></tr></thead><tbody id="stage4Data"><tr><td colspan="5" style="color:#888">暂无数据</td></tr></tbody></table>
+<table class="data-table"><thead><tr><th>鏃堕棿</th><th>鍑烘补娓?/th><th>寰幆娓?/th><th>鍑烘补閲?/th><th>寰幆閲?/th></tr></thead><tbody id="stage4Data"><tr><td colspan="5" style="color:#888">鏆傛棤鏁版嵁</td></tr></tbody></table>
 </div>
 </div>
 </div>
 </div>
 </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div id="pageDashboard" class="cost-page" style="display:none">
+<div class="panel"><h2>瀹炴椂鏁版嵁浠〃鐩?/h2>
+<div class="metrics-grid" style="grid-template-columns:repeat(3,1fr)">
+<div class="metric-card"><div class="metric-value" id="dashTemp">--</div><div class="metric-label">褰撳墠娓╁害 C</div></div>
+<div class="metric-card"><div class="metric-value" id="dashPressure">--</div><div class="metric-label">鍘嬪姏 MPa</div></div>
+<div class="metric-card"><div class="metric-value" id="dashProgress">--</div><div class="metric-label">鍙嶅簲杩涘害 %</div></div>
+<div class="metric-card"><div class="metric-value" id="dashHeatingRate">--</div><div class="metric-label">娓╁崌閫熺巼 C/min</div></div>
+<div class="metric-card"><div class="metric-value" id="dashEfficiency">--</div><div class="metric-label">鍗曚綅鑳借€?KWh/kg</div></div>
+<div class="metric-card"><div class="metric-value" id="dashOnlineUsers">--</div><div class="metric-label">鍦ㄧ嚎鍗忎綔浜烘暟</div></div>
+</div>
+<div style="margin-top:10px">
+<h3 style="color:#7fc8a9">鍗忎綔浜哄憳</h3>
+<div id="collabUsers" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+</div>
+<div style="margin-top:15px">
+<h3 style="color:#7fc8a9">鍘嗗彶鏁版嵁瓒嬪娍</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px">
+<div class="chart-box"><canvas id="stage1Chart"></canvas></div>
+<div class="chart-box"><canvas id="stage2Chart"></canvas></div>
+<div class="chart-box"><canvas id="stage3Chart"></canvas></div>
+<div class="chart-box"><canvas id="stage4Chart"></canvas></div>
+</div>
+</div>
+<div style="margin-top:15px">
+<button class="btn btn-info" onclick="showBatchComparison()">澶氭壒娆″姣斿垎鏋?/button>
+</div>
+</div>
+</div>
+
+<!-- MODAL OVERLAY -->
+<div id="modalOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:3000;justify-content:center;align-items:center;padding:20px">
+<div id="modalContent" style="max-width:900px;width:100%"></div>
+<button onclick="closeModal()" style="position:absolute;top:20px;right:20px;background:#dc3545;color:#fff;border:none;border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer">脳</button>
 </div>
 
 <!-- WORK ORDER PAGE -->
 <div id="pageWorkOrder" class="cost-page" style="display:none">
-<div class="panel"><h2>工单管理</h2>
-<div class="form-row"><div class="form-group"><label>反应批次</label><input type="text" id="woBatchId" placeholder="2026年4月24日-1批"></div><div class="form-group"><label>记录人</label><input type="text" id="woRecorder" placeholder="杨文博"></div></div>
-<div class="form-row"><div class="form-group"><label>班次时间</label><select id="woShift"><option value="早">早班</option><option value="中">中班</option><option value="晚">晚班</option></select></div><div class="form-group"><label>反应器编号</label><input type="text" id="woReactor" placeholder="R-01"></div></div>
-<div style="background:#0f3460;padding:5px 8px;border-radius:4px;margin:6px 0;font-weight:600;color:#7fc8a9;font-size:11px">温度数据录入</div>
+<div class="panel"><h2>宸ュ崟绠＄悊</h2>
+<div class="form-row"><div class="form-group"><label>鍙嶅簲鎵规</label><input type="text" id="woBatchId" placeholder="2026骞?鏈?4鏃?1鎵?></div><div class="form-group"><label>璁板綍浜?/label><input type="text" id="woRecorder" placeholder="鏉ㄦ枃鍗?></div></div>
+<div class="form-row"><div class="form-group"><label>鐝鏃堕棿</label><select id="woShift"><option value="鏃?>鏃╃彮</option><option value="涓?>涓彮</option><option value="鏅?>鏅氱彮</option></select></div><div class="form-group"><label>鍙嶅簲鍣ㄧ紪鍙?/label><input type="text" id="woReactor" placeholder="R-01"></div></div>
+<div style="background:#0f3460;padding:5px 8px;border-radius:4px;margin:6px 0;font-weight:600;color:#7fc8a9;font-size:11px">娓╁害鏁版嵁褰曞叆</div>
 <div id="workOrderRows">
 <div class="form-row">
-<div class="form-group"><label>时间</label><input type="time" class="wo-time" step="1"></div>
-<div class="form-group"><label>下温度 (C)</label><input type="number" class="wo-lower-temp" step="0.1" placeholder="0"></div>
-<div class="form-group"><label>上温度 (C)</label><input type="number" class="wo-upper-temp" step="0.1" placeholder="0"></div>
-<div class="form-group"><label>电流 (A)</label><input type="number" class="wo-current" step="0.1" placeholder="0"></div>
+<div class="form-group"><label>鏃堕棿</label><input type="time" class="wo-time" step="1"></div>
+<div class="form-group"><label>涓嬫俯搴?(C)</label><input type="number" class="wo-lower-temp" step="0.1" placeholder="0"></div>
+<div class="form-group"><label>涓婃俯搴?(C)</label><input type="number" class="wo-upper-temp" step="0.1" placeholder="0"></div>
+<div class="form-group"><label>鐢垫祦 (A)</label><input type="number" class="wo-current" step="0.1" placeholder="0"></div>
 </div>
 </div>
-<button class="btn btn-info" onclick="addWorkOrderRow()" style="width:100%;margin-top:6px">添加一行</button>
-<div style="display:flex;gap:6px;margin-top:10px"><button class="btn btn-success" onclick="saveWorkOrder()" style="flex:1">保存工单</button><button class="btn btn-warning" onclick="clearWorkOrder()" style="flex:1">清空</button></div>
+<button class="btn btn-info" onclick="addWorkOrderRow()" style="width:100%;margin-top:6px">娣诲姞涓€琛?/button>
+<div style="display:flex;gap:6px;margin-top:10px"><button class="btn btn-success" onclick="saveWorkOrder()" style="flex:1">淇濆瓨宸ュ崟</button><button class="btn btn-warning" onclick="clearWorkOrder()" style="flex:1">娓呯┖</button></div>
 <div class="section-divider"></div>
-<h3>已保存工单列表</h3>
+<h3>宸蹭繚瀛樺伐鍗曞垪琛?/h3>
 <div id="savedWorkOrders" style="margin-top:8px"></div>
 </div>
 </div>
 
 <!-- CLOUD DATA PAGE -->
 <div id="pageCloud" class="cost-page" style="display:none">
-<div class="panel"><h2>云端数据管理</h2>
+<div class="panel"><h2>浜戠鏁版嵁绠＄悊</h2>
 <div style="background:#0f3460;padding:10px;border-radius:6px;margin-bottom:10px">
 <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-<span style="color:#7fc8a9;font-weight:600">云端状态:</span>
-<span class="cloud-status offline" id="cloudStatusPage">离线</span>
+<span style="color:#7fc8a9;font-weight:600">浜戠鐘舵€?</span>
+<span class="cloud-status offline" id="cloudStatusPage">绂荤嚎</span>
 </div>
-<p style="color:#888;font-size:11px">数据存储在 GitHub Issues 中，所有人都可以访问历史记录</p>
+<p style="color:#888;font-size:11px">鏁版嵁瀛樺偍鍦?GitHub Issues 涓紝鎵€鏈変汉閮藉彲浠ヨ闂巻鍙茶褰?/p>
 </div>
 
 <div style="background:#1a2a4e;border:1px solid #e8a838;border-radius:6px;padding:10px;margin-bottom:10px">
-<h3 style="color:#e8a838;margin-top:0">GitHub Token 设置</h3>
-<p style="color:#888;font-size:11px;margin-bottom:8px">同步数据需要 GitHub Personal Access Token。获取方式：</p>
+<h3 style="color:#e8a838;margin-top:0">GitHub Token 璁剧疆</h3>
+<p style="color:#888;font-size:11px;margin-bottom:8px">鍚屾鏁版嵁闇€瑕?GitHub Personal Access Token銆傝幏鍙栨柟寮忥細</p>
 <ol style="color:#888;font-size:11px;margin-bottom:10px;padding-left:16px">
-<li>访问 <a href="https://github.com/settings/tokens" target="_blank" style="color:#17a2b8">github.com/settings/tokens</a></li>
-<li>点击 "Generate new token (classic)"</li>
-<li>勾选 "repo" 权限</li>
-<li>生成后复制 token 到下方输入框</li>
+<li>璁块棶 <a href="https://github.com/settings/tokens" target="_blank" style="color:#17a2b8">github.com/settings/tokens</a></li>
+<li>鐐瑰嚮 "Generate new token (classic)"</li>
+<li>鍕鹃€?"repo" 鏉冮檺</li>
+<li>鐢熸垚鍚庡鍒?token 鍒颁笅鏂硅緭鍏ユ</li>
 </ol>
 <div class="form-group">
 <label>GitHub Token</label>
 <input type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxx" value="">
 </div>
-<button class="btn btn-success" onclick="saveGitHubToken()" style="width:100%">保存 Token</button>
+<button class="btn btn-success" onclick="saveGitHubToken()" style="width:100%">淇濆瓨 Token</button>
 <div id="tokenStatus" style="text-align:center;margin-top:6px;font-size:11px;color:#888"></div>
 </div>
 
 <div style="display:flex;gap:6px;margin-bottom:10px">
-<button class="btn btn-success" onclick="syncToCloud()">同步当前数据到云端</button>
-<button class="btn btn-info" onclick="loadFromCloud()">从云端加载数据</button>
+<button class="btn btn-success" onclick="syncToCloud()">鍚屾褰撳墠鏁版嵁鍒颁簯绔?/button>
+<button class="btn btn-info" onclick="loadFromCloud()">浠庝簯绔姞杞芥暟鎹?/button>
 </div>
 <div class="section-divider"></div>
-<h3>云端历史记录</h3>
+<h3>浜戠鍘嗗彶璁板綍</h3>
 <div id="cloudHistory" style="margin-top:8px">
-<div style="color:#888;text-align:center;padding:20px">点击"从云端加载数据"查看历史记录</div>
+<div style="color:#888;text-align:center;padding:20px">鐐瑰嚮"浠庝簯绔姞杞芥暟鎹?鏌ョ湅鍘嗗彶璁板綍</div>
 </div>
 </div>
 </div>
@@ -392,7 +482,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 const GITHUB_OWNER = 'ziyuddu2';
 const GITHUB_REPO = 'oil-reaction-station';
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
-// GitHub Personal Access Token - 用户需要在登录后设置
+// GitHub Personal Access Token - 鐢ㄦ埛闇€瑕佸湪鐧诲綍鍚庤缃?
 let GITHUB_TOKEN = localStorage.getItem('github_token') || '';
 
 // ===== DATA STRUCTURES =====
@@ -431,7 +521,7 @@ function updateCloudStatus(online){
   const statusEl = document.getElementById('cloudStatus');
   const statusPageEl = document.getElementById('cloudStatusPage');
   const statusClass = online ? 'cloud-status online' : 'cloud-status offline';
-  const statusText = online ? '在线' : '离线';
+  const statusText = online ? '鍦ㄧ嚎' : '绂荤嚎';
   if(statusEl) { statusEl.className = statusClass; statusEl.textContent = statusText; }
   if(statusPageEl) { statusPageEl.className = statusClass; statusPageEl.textContent = statusText; }
 }
@@ -450,9 +540,9 @@ async function checkCloudConnection(){
 }
 
 async function syncToCloud(){
-  if(!confirm('确定将当前数据同步到云端？这会创建一个新的 GitHub Issue。'))return;
+  if(!confirm('纭畾灏嗗綋鍓嶆暟鎹悓姝ュ埌浜戠锛熻繖浼氬垱寤轰竴涓柊鐨?GitHub Issue銆?))return;
   
-  showStatus('正在同步到云端...','info');
+  showStatus('姝ｅ湪鍚屾鍒颁簯绔?..','info');
   updateCloudStatus(false);
   
   const data = {
@@ -471,17 +561,17 @@ async function syncToCloud(){
     }
   };
   
-  const title = `数据备份 - ${data.batchId || '未命名批次'} - ${new Date().toLocaleString('zh-CN')}`;
+  const title = `鏁版嵁澶囦唤 - ${data.batchId || '鏈懡鍚嶆壒娆?} - ${new Date().toLocaleString('zh-CN')}`;
   const body = '```json\n' + JSON.stringify(data, null, 2) + '\n```';
   
   try{
-    // 检查是否有 token
+    // 妫€鏌ユ槸鍚︽湁 token
     if(!GITHUB_TOKEN){
-      showStatus('请先设置 GitHub Token（点击云端数据页面）','error');
+      showStatus('璇峰厛璁剧疆 GitHub Token锛堢偣鍑讳簯绔暟鎹〉闈級','error');
       return;
     }
     
-    // 使用 GitHub API 创建 Issue（需要 token 认证）
+    // 浣跨敤 GitHub API 鍒涘缓 Issue锛堥渶瑕?token 璁よ瘉锛?
     const res = await fetch(`${GITHUB_API}/issues`, {
       method: 'POST',
       headers: {
@@ -493,37 +583,37 @@ async function syncToCloud(){
     
     if(res.ok){
       const issue = await res.json();
-      showStatus('同步成功！Issue #' + issue.number, 'success');
+      showStatus('鍚屾鎴愬姛锛両ssue #' + issue.number, 'success');
       updateCloudStatus(true);
       loadCloudHistory();
     }else{
       const err = await res.text();
-      showStatus('同步失败: ' + err, 'error');
+      showStatus('鍚屾澶辫触: ' + err, 'error');
       updateCloudStatus(false);
     }
   }catch(e){
-    showStatus('同步失败: ' + e.message, 'error');
+    showStatus('鍚屾澶辫触: ' + e.message, 'error');
     updateCloudStatus(false);
   }
 }
 
 async function loadFromCloud(){
-  showStatus('正在从云端加载...','info');
+  showStatus('姝ｅ湪浠庝簯绔姞杞?..','info');
   
   try{
     const res = await fetch(`${GITHUB_API}/issues?state=all&labels=data-backup&per_page=10`);
     if(!res.ok){
-      showStatus('加载失败', 'error');
+      showStatus('鍔犺浇澶辫触', 'error');
       return;
     }
     
     const issues = await res.json();
     if(issues.length === 0){
-      showStatus('云端暂无数据', 'warning');
+      showStatus('浜戠鏆傛棤鏁版嵁', 'warning');
       return;
     }
     
-    // 加载最新的数据
+    // 鍔犺浇鏈€鏂扮殑鏁版嵁
     const latest = issues[0];
     const match = latest.body.match(/```json\n([\s\S]*?)\n```/);
     if(match){
@@ -533,41 +623,41 @@ async function loadFromCloud(){
         localStorage.setItem('oil_workOrders', JSON.stringify(workOrders));
         renderSavedWorkOrders();
       }
-      showStatus('加载成功！共 ' + issues.length + ' 条历史记录', 'success');
+      showStatus('鍔犺浇鎴愬姛锛佸叡 ' + issues.length + ' 鏉″巻鍙茶褰?, 'success');
       updateCloudStatus(true);
       loadCloudHistory();
     }
   }catch(e){
-    showStatus('加载失败: ' + e.message, 'error');
+    showStatus('鍔犺浇澶辫触: ' + e.message, 'error');
     updateCloudStatus(false);
   }
 }
 
 async function loadCloudHistory(){
   const div = document.getElementById('cloudHistory');
-  div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">加载中...</div>';
+  div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">鍔犺浇涓?..</div>';
   
   try{
     const res = await fetch(`${GITHUB_API}/issues?state=all&labels=data-backup&per_page=20`);
     if(!res.ok){
-      div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">加载失败</div>';
+      div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">鍔犺浇澶辫触</div>';
       return;
     }
     
     const issues = await res.json();
     if(issues.length === 0){
-      div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">暂无云端数据</div>';
+      div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">鏆傛棤浜戠鏁版嵁</div>';
       return;
     }
     
     div.innerHTML = issues.map(issue => {
       const date = new Date(issue.created_at).toLocaleString('zh-CN');
       const match = issue.body.match(/```json\n([\s\S]*?)\n```/);
-      let batchInfo = '未知批次';
+      let batchInfo = '鏈煡鎵规';
       if(match){
         try{
           const data = JSON.parse(match[1]);
-          batchInfo = data.batchId || '未命名批次';
+          batchInfo = data.batchId || '鏈懡鍚嶆壒娆?;
         }catch(e){}
       }
       return `<div style="background:#0f3460;border-radius:4px;padding:8px;margin:4px 0;cursor:pointer" onclick="loadCloudIssue(${issue.number})">
@@ -579,17 +669,17 @@ async function loadCloudHistory(){
       </div>`;
     }).join('');
   }catch(e){
-    div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">加载失败: ' + e.message + '</div>';
+    div.innerHTML = '<div style="color:#888;text-align:center;padding:10px">鍔犺浇澶辫触: ' + e.message + '</div>';
   }
 }
 
 async function loadCloudIssue(issueNumber){
-  showStatus('正在加载 Issue #' + issueNumber + '...', 'info');
+  showStatus('姝ｅ湪鍔犺浇 Issue #' + issueNumber + '...', 'info');
   
   try{
     const res = await fetch(`${GITHUB_API}/issues/${issueNumber}`);
     if(!res.ok){
-      showStatus('加载失败', 'error');
+      showStatus('鍔犺浇澶辫触', 'error');
       return;
     }
     
@@ -601,11 +691,11 @@ async function loadCloudIssue(issueNumber){
         workOrders = data.workOrders;
         localStorage.setItem('oil_workOrders', JSON.stringify(workOrders));
         renderSavedWorkOrders();
-        showStatus('已加载 Issue #' + issueNumber, 'success');
+        showStatus('宸插姞杞?Issue #' + issueNumber, 'success');
       }
     }
   }catch(e){
-    showStatus('加载失败: ' + e.message, 'error');
+    showStatus('鍔犺浇澶辫触: ' + e.message, 'error');
   }
 }
 
@@ -635,7 +725,7 @@ function updateStage2Diff(){
 // ===== LOGIN SYSTEM =====
 function loginUser(){
   const name=document.getElementById('loginUsername').value.trim();
-  if(!name){showStatus('请输入用户名','error');return}
+  if(!name){showStatus('璇疯緭鍏ョ敤鎴峰悕','error');return}
   currentUser=name;
   localStorage.setItem('oil_currentUser',name);
   let users=JSON.parse(localStorage.getItem('oil_users')||'[]');
@@ -646,7 +736,7 @@ function loginUser(){
   document.getElementById('operator').value=name;
   loadUserData();
   checkCloudConnection();
-  showStatus('欢迎 '+name,'success');
+  showStatus('娆㈣繋 '+name,'success');
 }
 function switchUser(){
   document.getElementById('loginOverlay').style.display='flex';
@@ -666,13 +756,16 @@ function showUserList(){
 // ===== PAGE NAVIGATION =====
 function showPage(page){
   document.getElementById('pageProduction').style.display=page==='production'?'block':'none';
+  document.getElementById('pageDashboard').style.display=page==='dashboard'?'block':'none';
   document.getElementById('pageWorkOrder').style.display=page==='workorder'?'block':'none';
   document.getElementById('pageCloud').style.display=page==='cloud'?'block':'none';
   document.getElementById('navProduction').className='nav-btn'+(page==='production'?' active':'');
+  document.getElementById('navDashboard').className='nav-btn'+(page==='dashboard'?' active':'');
   document.getElementById('navWorkOrder').className='nav-btn'+(page==='workorder'?' active':'');
   document.getElementById('navCloud').className='nav-btn'+(page==='cloud'?' active':'');
   
   if(page==='cloud') loadCloudHistory();
+  if(page==='dashboard') updateDashboard();
 }
 
 // ===== TEMPERATURE CONTROL PANEL =====
@@ -693,15 +786,15 @@ function updateTempDisplay(){
   
   const arrow=document.getElementById('tempArrow');
   const trend=document.getElementById('tempTrend');
-  if(current<target){arrow.textContent='↑';arrow.className='temp-arrow';trend.textContent='升温中';}
-  else if(current>target){arrow.textContent='↓';arrow.className='temp-arrow down';trend.textContent='降温中';}
-  else{arrow.textContent='→';arrow.className='temp-arrow';trend.textContent='恒温';}
+  if(current<target){arrow.textContent='鈫?;arrow.className='temp-arrow';trend.textContent='鍗囨俯涓?;}
+  else if(current>target){arrow.textContent='鈫?;arrow.className='temp-arrow down';trend.textContent='闄嶆俯涓?;}
+  else{arrow.textContent='鈫?;arrow.className='temp-arrow';trend.textContent='鎭掓俯';}
 }
 
 // ===== STAGE CONTROL =====
 function startStage(n){
   const s=stageData[n];
-  if(s.running){showStatus('阶段'+n+' 已在运行','warning');return}
+  if(s.running){showStatus('闃舵'+n+' 宸插湪杩愯','warning');return}
   
   s.running=true;
   s.startTime=Date.now();
@@ -713,7 +806,7 @@ function startStage(n){
   s.cycleAmount=0;
   s.stirEnergy=0;
   
-  document.getElementById('stage'+n+'Status').textContent='运行中';
+  document.getElementById('stage'+n+'Status').textContent='杩愯涓?;
   document.getElementById('stage'+n+'Status').className='stage-status running';
   document.getElementById('stage'+n+'Idle').style.display='none';
   document.getElementById('stage'+n+'Run').style.display='flex';
@@ -721,7 +814,7 @@ function startStage(n){
   
   const tbodyIds = {1:'stage1Data',2:'stage2Data',3:'stage3Data',4:'stage4Data'};
   const tbody = document.getElementById(tbodyIds[n]);
-  if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="color:#888">暂无数据</td></tr>';
+  if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="color:#888">鏆傛棤鏁版嵁</td></tr>';
   
   const enIds = {1:'stage1En',2:'stage2En',3:'stage3En',4:'stage4En'};
   const enEl = document.getElementById(enIds[n]);
@@ -745,7 +838,7 @@ function startStage(n){
       document.getElementById('stage2LiveEn').textContent=liveEnergy.toFixed(3)+' KWh';
     }
   },1000);
-  showStatus('阶段'+n+' 开始运行','success');
+  showStatus('闃舵'+n+' 寮€濮嬭繍琛?,'success');
 }
 
 function stopStage(n){
@@ -753,18 +846,18 @@ function stopStage(n){
   if(!s.running)return;
   s.running=false;
   if(s.timer){clearInterval(s.timer);s.timer=null}
-  document.getElementById('stage'+n+'Status').textContent='已停止';
+  document.getElementById('stage'+n+'Status').textContent='宸插仠姝?;
   document.getElementById('stage'+n+'Status').className='stage-status stopped';
   document.getElementById('stage'+n+'Idle').style.display='flex';
   document.getElementById('stage'+n+'Run').style.display='none';
   document.getElementById('stage'+n+'Card').classList.remove('running');
-  showStatus('阶段'+n+' 已停止','info');
+  showStatus('闃舵'+n+' 宸插仠姝?,'info');
   updateMetrics();
 }
 
 function inputStage(n){
   const s=stageData[n],now=new Date(),t=fmtTime(now);
-  if(!s.running){showStatus('阶段'+n+' 未运行，无法输入','warning');return}
+  if(!s.running){showStatus('闃舵'+n+' 鏈繍琛岋紝鏃犳硶杈撳叆','warning');return}
   
   let r={time:t},pwr=0,dt=0;
   if(s.last.time){
@@ -782,7 +875,7 @@ function inputStage(n){
     document.getElementById('stage1En').textContent=s.energy.toFixed(3)+' KWh';
     
     const tbody=document.getElementById('stage1Data');
-    if(tbody.children.length===1&&tbody.children[0].textContent.includes('暂无'))tbody.innerHTML='';
+    if(tbody.children.length===1&&tbody.children[0].textContent.includes('鏆傛棤'))tbody.innerHTML='';
     const tr=document.createElement('tr');
     tr.innerHTML='<td>'+t+'</td><td>'+upper+'</td><td>'+lower+'</td><td>'+(diff>=0?'+':'')+diff.toFixed(1)+'</td><td>'+pw.toFixed(1)+'</td><td>'+s.energy.toFixed(3)+'</td>';
     tbody.appendChild(tr);
@@ -812,7 +905,7 @@ function inputStage(n){
     document.getElementById('stage2LiveEn').textContent=s.energy.toFixed(3)+' KWh';
     
     const tbody=document.getElementById('stage2Data');
-    if(tbody.children.length===1&&tbody.children[0].textContent.includes('暂无'))tbody.innerHTML='';
+    if(tbody.children.length===1&&tbody.children[0].textContent.includes('鏆傛棤'))tbody.innerHTML='';
     const tr=document.createElement('tr');
     tr.innerHTML='<td>'+t+'</td><td>'+upper+'</td><td>'+lower+'</td><td>'+(diff>=0?'+':'')+diff.toFixed(1)+'</td><td>'+pw.toFixed(1)+'</td><td>'+fmtDur(Math.floor((Date.now()-s.startTime)/1000))+'</td><td>'+s.energy.toFixed(3)+'</td>';
     tbody.appendChild(tr);
@@ -833,7 +926,7 @@ function inputStage(n){
     document.getElementById('stage3En').textContent=s.energy.toFixed(3)+' KWh';
     
     const tbody=document.getElementById('stage3Data');
-    if(tbody.children.length===1&&tbody.children[0].textContent.includes('暂无'))tbody.innerHTML='';
+    if(tbody.children.length===1&&tbody.children[0].textContent.includes('鏆傛棤'))tbody.innerHTML='';
     const tr=document.createElement('tr');
     tr.innerHTML='<td>'+t+'</td><td>'+gf.toFixed(1)+'</td><td>'+pr.toFixed(3)+'</td><td>'+pd.toFixed(3)+'</td><td>'+oxygenLevel.toFixed(1)+'%</td><td>'+s.energy.toFixed(3)+'</td>';
     tbody.appendChild(tr);
@@ -850,33 +943,33 @@ function inputStage(n){
     document.getElementById('stage4En').textContent=s.energy.toFixed(3)+' KWh';
     
     const tbody=document.getElementById('stage4Data');
-    if(tbody.children.length===1&&tbody.children[0].textContent.includes('暂无'))tbody.innerHTML='';
+    if(tbody.children.length===1&&tbody.children[0].textContent.includes('鏆傛棤'))tbody.innerHTML='';
     const tr=document.createElement('tr');
     tr.innerHTML='<td>'+t+'</td><td>'+tmp+'</td><td>'+ctmp+'</td><td>'+oil.toFixed(1)+'</td><td>'+cyc.toFixed(1)+'</td>';
     tbody.appendChild(tr);
   }
   
   s.last={time:t,...r};
-  showStatus('阶段'+n+' 数据已记录','success');
+  showStatus('闃舵'+n+' 鏁版嵁宸茶褰?,'success');
 }
 
 // ===== METER & OUTPUT =====
 function calcMeterDiff(){
   const start=getI('powerMeterStart'),end=getI('powerMeterEnd');
-  if(!start||!end){showStatus('请输入电表读数','error');return}
+  if(!start||!end){showStatus('璇疯緭鍏ョ數琛ㄨ鏁?,'error');return}
   const diff=end-start;
-  document.getElementById('meterDiffDisp').innerHTML='<span style="color:#e8a838">用电量: '+diff.toFixed(3)+' KWh</span>';
-  showStatus('用电量: '+diff.toFixed(3)+' KWh','success');
+  document.getElementById('meterDiffDisp').innerHTML='<span style="color:#e8a838">鐢ㄧ數閲? '+diff.toFixed(3)+' KWh</span>';
+  showStatus('鐢ㄧ數閲? '+diff.toFixed(3)+' KWh','success');
 }
 
 function calculateOutput(){
   const pw=getI('productWeight'),sw=getI('sampleWeight'),lw=getI('labWeight'),ah=getI('reactionAh');
-  if(!pw){showStatus('请输入产品重量','error');return}
+  if(!pw){showStatus('璇疯緭鍏ヤ骇鍝侀噸閲?,'error');return}
   const totalEnergy=Object.values(stageData).reduce((a,s)=>a+s.energy,0);
   const energyPerKg=totalEnergy/pw;
   document.getElementById('productYield').textContent=pw.toFixed(3)+' kg';
   document.getElementById('energyPerKg').textContent=energyPerKg.toFixed(3)+' KWh/kg';
-  showStatus('产出计算完成','success');
+  showStatus('浜у嚭璁＄畻瀹屾垚','success');
 }
 
 // ===== METRICS UPDATE =====
@@ -902,10 +995,10 @@ function updateMetrics(){
   document.getElementById('maxTemp').textContent=maxTemp.toFixed(1);
   
   const eb=document.getElementById('energyBreakdown');
-  eb.innerHTML='<tr><td>加热</td><td>'+stageData[1].energy.toFixed(3)+'</td></tr>'+
-    '<tr><td>保温</td><td>'+stageData[2].energy.toFixed(3)+'</td></tr>'+
-    '<tr><td>换气</td><td>'+stageData[3].energy.toFixed(3)+'</td></tr>'+
-    '<tr><td>出油循环</td><td>'+stageData[4].energy.toFixed(3)+'</td></tr>';
+  eb.innerHTML='<tr><td>鍔犵儹</td><td>'+stageData[1].energy.toFixed(3)+'</td></tr>'+
+    '<tr><td>淇濇俯</td><td>'+stageData[2].energy.toFixed(3)+'</td></tr>'+
+    '<tr><td>鎹㈡皵</td><td>'+stageData[3].energy.toFixed(3)+'</td></tr>'+
+    '<tr><td>鍑烘补寰幆</td><td>'+stageData[4].energy.toFixed(3)+'</td></tr>';
 }
 
 // ===== WORK ORDER MANAGEMENT =====
@@ -913,12 +1006,12 @@ function addWorkOrderRow(){
   const div=document.getElementById('workOrderRows');
   const row=document.createElement('div');
   row.className='form-row';
-  row.innerHTML='<div class="form-group"><label>时间</label><input type="time" class="wo-time" step="1"></div><div class="form-group"><label>下温度 (C)</label><input type="number" class="wo-lower-temp" step="0.1" placeholder="0"></div><div class="form-group"><label>上温度 (C)</label><input type="number" class="wo-upper-temp" step="0.1" placeholder="0"></div><div class="form-group"><label>电流 (A)</label><input type="number" class="wo-current" step="0.1" placeholder="0"></div>';
+  row.innerHTML='<div class="form-group"><label>鏃堕棿</label><input type="time" class="wo-time" step="1"></div><div class="form-group"><label>涓嬫俯搴?(C)</label><input type="number" class="wo-lower-temp" step="0.1" placeholder="0"></div><div class="form-group"><label>涓婃俯搴?(C)</label><input type="number" class="wo-upper-temp" step="0.1" placeholder="0"></div><div class="form-group"><label>鐢垫祦 (A)</label><input type="number" class="wo-current" step="0.1" placeholder="0"></div>';
   div.appendChild(row);
 }
 
 function saveWorkOrder(){
-  const batchId=document.getElementById('woBatchId').value||'未命名批次';
+  const batchId=document.getElementById('woBatchId').value||'鏈懡鍚嶆壒娆?;
   const recorder=document.getElementById('woRecorder').value||currentUser;
   const shift=document.getElementById('woShift').value;
   const reactor=document.getElementById('woReactor').value||'R-01';
@@ -936,12 +1029,12 @@ function saveWorkOrder(){
   workOrders.push(wo);
   localStorage.setItem('oil_workOrders',JSON.stringify(workOrders));
   renderSavedWorkOrders();
-  showStatus('工单已保存: '+batchId,'success');
+  showStatus('宸ュ崟宸蹭繚瀛? '+batchId,'success');
   
-  // 自动导出到文件
+  // 鑷姩瀵煎嚭鍒版枃浠?
   autoExportToFile();
   
-  // 自动同步到云端
+  // 鑷姩鍚屾鍒颁簯绔?
   if(GITHUB_TOKEN){
     syncToCloud();
   }
@@ -949,12 +1042,12 @@ function saveWorkOrder(){
 
 function renderSavedWorkOrders(){
   const div=document.getElementById('savedWorkOrders');
-  if(workOrders.length===0){div.innerHTML='<div style="color:#888;text-align:center">暂无工单</div>';return;}
+  if(workOrders.length===0){div.innerHTML='<div style="color:#888;text-align:center">鏆傛棤宸ュ崟</div>';return;}
   div.innerHTML=workOrders.map(wo=>{
     const lastTemp=wo.rows.length>0?wo.rows[wo.rows.length-1].upperTemp+' / '+wo.rows[wo.rows.length-1].lowerTemp:'--';
     return '<div style="background:#0f3460;border-radius:4px;padding:8px;margin:4px 0;cursor:pointer" onclick="loadWorkOrder('+wo.id+')">'+
       '<div style="display:flex;justify-content:space-between"><span style="color:#e8a838;font-weight:600">'+wo.batchId+'</span><span style="color:#888;font-size:10px">'+wo.recorder+'</span></div>'+
-      '<div style="color:#888;font-size:10px;margin-top:2px">'+wo.shift+'班 | '+wo.rows.length+'条记录 | 末温:'+lastTemp+'C</div>'+
+      '<div style="color:#888;font-size:10px;margin-top:2px">'+wo.shift+'鐝?| '+wo.rows.length+'鏉¤褰?| 鏈俯:'+lastTemp+'C</div>'+
       '</div>';
   }).join('');
 }
@@ -965,8 +1058,8 @@ function loadWorkOrder(id){
   currentWorkOrder=wo;
   
   const display=document.getElementById('workOrderDisplay');
-  let html='<div style="color:#e8a838;font-weight:600;margin-bottom:6px">'+wo.batchId+' | '+wo.recorder+' | '+wo.shift+'班</div>';
-  html+='<table class="data-table"><thead><tr><th>时间</th><th>下温度</th><th>上温度</th><th>电流</th></tr></thead><tbody>';
+  let html='<div style="color:#e8a838;font-weight:600;margin-bottom:6px">'+wo.batchId+' | '+wo.recorder+' | '+wo.shift+'鐝?/div>';
+  html+='<table class="data-table"><thead><tr><th>鏃堕棿</th><th>涓嬫俯搴?/th><th>涓婃俯搴?/th><th>鐢垫祦</th></tr></thead><tbody>';
   wo.rows.forEach(r=>{
     html+='<tr><td>'+r.time+'</td><td>'+r.lowerTemp+'</td><td>'+r.upperTemp+'</td><td>'+r.current+'</td></tr>';
   });
@@ -976,7 +1069,7 @@ function loadWorkOrder(id){
   document.getElementById('batchId').value=wo.batchId;
   document.getElementById('reactorId').value=wo.reactor;
   
-  showStatus('工单已加载: '+wo.batchId,'success');
+  showStatus('宸ュ崟宸插姞杞? '+wo.batchId,'success');
   showPage('production');
 }
 
@@ -984,7 +1077,7 @@ function clearWorkOrder(){
   document.getElementById('woBatchId').value='';
   document.getElementById('woRecorder').value='';
   document.getElementById('woReactor').value='';
-  document.getElementById('workOrderRows').innerHTML='<div class="form-row"><div class="form-group"><label>时间</label><input type="time" class="wo-time" step="1"></div><div class="form-group"><label>下温度 (C)</label><input type="number" class="wo-lower-temp" step="0.1" placeholder="0"></div><div class="form-group"><label>上温度 (C)</label><input type="number" class="wo-upper-temp" step="0.1" placeholder="0"></div><div class="form-group"><label>电流 (A)</label><input type="number" class="wo-current" step="0.1" placeholder="0"></div></div>';
+  document.getElementById('workOrderRows').innerHTML='<div class="form-row"><div class="form-group"><label>鏃堕棿</label><input type="time" class="wo-time" step="1"></div><div class="form-group"><label>涓嬫俯搴?(C)</label><input type="number" class="wo-lower-temp" step="0.1" placeholder="0"></div><div class="form-group"><label>涓婃俯搴?(C)</label><input type="number" class="wo-upper-temp" step="0.1" placeholder="0"></div><div class="form-group"><label>鐢垫祦 (A)</label><input type="number" class="wo-current" step="0.1" placeholder="0"></div></div>';
 }
 
 // ===== EXPORT/IMPORT =====
@@ -993,7 +1086,7 @@ function exportAllData(){
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download='OilReaction-V3-'+Date.now()+'.json';a.click();
-  showStatus('数据已导出','success');
+  showStatus('鏁版嵁宸插鍑?,'success');
 }
 function importData(e){
   const file=e.target.files[0];if(!file)return;
@@ -1002,15 +1095,15 @@ function importData(e){
     try{
       const data=JSON.parse(ev.target.result);
       if(data.workOrders){workOrders=data.workOrders;localStorage.setItem('oil_workOrders',JSON.stringify(workOrders));renderSavedWorkOrders();}
-      showStatus('数据导入成功','success');
-    }catch(err){showStatus('导入失败: '+err.message,'error');}
+      showStatus('鏁版嵁瀵煎叆鎴愬姛','success');
+    }catch(err){showStatus('瀵煎叆澶辫触: '+err.message,'error');}
   };
   reader.readAsText(file);
 }
 
 // ===== CLEAR ALL =====
 function clearAll(){
-  if(!confirm('确定清空所有数据？'))return;
+  if(!confirm('纭畾娓呯┖鎵€鏈夋暟鎹紵'))return;
   for(let i=1;i<=4;i++){
     const s=stageData[i];
     s.running=false;
@@ -1024,7 +1117,7 @@ function clearAll(){
     s.cycleAmount=0;
     s.stirEnergy=0;
     s.startTime=null;
-    document.getElementById('stage'+i+'Status').textContent='未开始';
+    document.getElementById('stage'+i+'Status').textContent='鏈紑濮?;
     document.getElementById('stage'+i+'Status').className='stage-status idle';
     document.getElementById('stage'+i+'Idle').style.display='flex';
     document.getElementById('stage'+i+'Run').style.display='none';
@@ -1033,23 +1126,23 @@ function clearAll(){
     
     const tbodyIds = {1:'stage1Data',2:'stage2Data',3:'stage3Data',4:'stage4Data'};
     const tbody = document.getElementById(tbodyIds[i]);
-    if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="color:#888">暂无数据</td></tr>';
+    if(tbody) tbody.innerHTML = '<tr><td colspan="6" style="color:#888">鏆傛棤鏁版嵁</td></tr>';
   }
-  showStatus('所有数据已清空','success');
+  showStatus('鎵€鏈夋暟鎹凡娓呯┖','success');
 }
 
 // ===== GITHUB TOKEN MANAGEMENT =====
 function saveGitHubToken(){
   const token = document.getElementById('githubTokenInput').value.trim();
-  if(!token){showStatus('请输入 Token','error');return;}
+  if(!token){showStatus('璇疯緭鍏?Token','error');return;}
   if(!token.startsWith('ghp_') && !token.startsWith('gho_') && !token.startsWith('github_pat_')){
-    showStatus('Token 格式不正确，应以 ghp_、gho_ 或 github_pat_ 开头','warning');
+    showStatus('Token 鏍煎紡涓嶆纭紝搴斾互 ghp_銆乬ho_ 鎴?github_pat_ 寮€澶?,'warning');
     return;
   }
   GITHUB_TOKEN = token;
   localStorage.setItem('github_token', token);
-  document.getElementById('tokenStatus').innerHTML = '<span style="color:#28a745">✓ Token 已保存</span>';
-  showStatus('GitHub Token 已保存','success');
+  document.getElementById('tokenStatus').innerHTML = '<span style="color:#28a745">鉁?Token 宸蹭繚瀛?/span>';
+  showStatus('GitHub Token 宸蹭繚瀛?,'success');
   checkCloudConnection();
 }
 
@@ -1058,7 +1151,7 @@ function loadGitHubToken(){
   if(token){
     GITHUB_TOKEN = token;
     document.getElementById('githubTokenInput').value = token;
-    document.getElementById('tokenStatus').innerHTML = '<span style="color:#28a745">✓ Token 已加载</span>';
+    document.getElementById('tokenStatus').innerHTML = '<span style="color:#28a745">鉁?Token 宸插姞杞?/span>';
   }
 }
 
@@ -1081,7 +1174,7 @@ function saveToLocal(){
     saveTime:new Date().toISOString()
   };
   localStorage.setItem('oil_autoSave',JSON.stringify(data));
-  showStatus('自动保存完成','info');
+  showStatus('鑷姩淇濆瓨瀹屾垚','info');
 }
 
 // ===== AUTO EXPORT (triggered on save work order) =====
@@ -1097,10 +1190,10 @@ function autoExportToFile(){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
-  a.download='油化工作站数据_'+new Date().toISOString().slice(0,19).replace(/:/g,'-')+'.json';
+  a.download='娌瑰寲宸ヤ綔绔欐暟鎹甠'+new Date().toISOString().slice(0,19).replace(/:/g,'-')+'.json';
   a.click();
   URL.revokeObjectURL(url);
-  showStatus('自动导出完成','info');
+  showStatus('鑷姩瀵煎嚭瀹屾垚','info');
 }
 
 // ===== CLOCK =====
@@ -1116,6 +1209,331 @@ function updateClock(){
   if(el) el.textContent=y+'-'+m+'-'+d+' '+h+':'+min+':'+s;
 }
 
+// ===== COLLABORATION =====
+let collaborationUsers = [];
+let collaborationHeartbeat = null;
+
+function startCollaboration(){
+  if(collaborationHeartbeat) clearInterval(collaborationHeartbeat);
+  collaborationHeartbeat = setInterval(()=>{
+    const data = {
+      user: currentUser,
+      timestamp: Date.now(),
+      batchId: document.getElementById('batchId').value,
+      activeStage: getActiveStage()
+    };
+    localStorage.setItem('oil_collab_' + currentUser, JSON.stringify(data));
+    updateCollaborationDisplay();
+  }, 5000);
+}
+
+function getActiveStage(){
+  for(let i=1;i<=4;i++){
+    if(stageData[i].running) return '闃舵' + i;
+  }
+  return '寰呮満';
+}
+
+function updateCollaborationDisplay(){
+  const users = [];
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    if(key && key.startsWith('oil_collab_')){
+      try{
+        const data = JSON.parse(localStorage.getItem(key));
+        if(Date.now() - data.timestamp < 30000){
+          users.push(data);
+        }
+      }catch(e){}
+    }
+  }
+  collaborationUsers = users;
+  const div = document.getElementById('collabUsers');
+  if(div){
+    div.innerHTML = users.map(u => 
+      '<span style="background:#0f3460;border-radius:12px;padding:2px 8px;font-size:11px;color:#7fc8a9">'+
+      u.user + ' | ' + u.activeStage + '</span>'
+    ).join('');
+  }
+}
+
+// ===== DASHBOARD =====
+function updateDashboard(){
+  const s1 = stageData[1];
+  const currentTemp = s1.records.length > 0 ? s1.records[s1.records.length-1].upperTemp : 0;
+  document.getElementById('dashTemp').textContent = currentTemp.toFixed(1);
+  
+  const s3 = stageData[3];
+  const pressure = s3.records.length > 0 ? s3.records[s3.records.length-1].pressure : 0;
+  document.getElementById('dashPressure').textContent = pressure.toFixed(3);
+  
+  const progress = calculateReactionProgress();
+  document.getElementById('dashProgress').textContent = (progress * 100).toFixed(1) + '%';
+  
+  // 娓╁崌閫熺巼
+  const rate = calculateHeatingRate();
+  document.getElementById('dashHeatingRate').textContent = rate.toFixed(2) + ' C/min';
+  
+  // 鑳借€楁晥鐜?
+  const pw = getI('productWeight');
+  const totalEnergy = Object.values(stageData).reduce((a,s)=>a+s.energy,0);
+  const efficiency = pw ? (totalEnergy / pw).toFixed(3) : '--';
+  document.getElementById('dashEfficiency').textContent = efficiency + ' KWh/kg';
+  
+  // 鍦ㄧ嚎鍗忎綔浜烘暟
+  document.getElementById('dashOnlineUsers').textContent = collaborationUsers.length;
+  
+  // 鏇存柊浠〃鐩?
+  updateGauges(currentTemp, pressure, progress);
+  
+  // 鏇存柊鍥捐〃
+  updateStageCharts();
+}
+
+function updateGauges(temp, pressure, progress){
+  // 娓╁害浠〃鐩?(0-1000C)
+  const tempAngle = Math.min(temp / 1000 * 360, 360);
+  const tempGauge = document.getElementById('tempGauge');
+  if(tempGauge) tempGauge.style.transform = 'rotate(' + tempAngle + 'deg)';
+  const gaugeTemp = document.getElementById('gaugeTemp');
+  if(gaugeTemp) gaugeTemp.textContent = temp.toFixed(1);
+  
+  // 鍘嬪姏浠〃鐩?(0-10MPa)
+  const pressureAngle = Math.min(pressure / 10 * 360, 360);
+  const pressureGauge = document.getElementById('pressureGauge');
+  if(pressureGauge) pressureGauge.style.transform = 'rotate(' + pressureAngle + 'deg)';
+  const gaugePressure = document.getElementById('gaugePressure');
+  if(gaugePressure) gaugePressure.textContent = pressure.toFixed(2);
+  
+  // 杩涘害浠〃鐩?
+  const progressAngle = progress * 360;
+  const progressGauge = document.getElementById('progressGauge');
+  if(progressGauge) progressGauge.style.transform = 'rotate(' + progressAngle + 'deg)';
+  const gaugeProgress = document.getElementById('gaugeProgress');
+  if(gaugeProgress) gaugeProgress.textContent = (progress * 100).toFixed(1);
+}
+
+function calculateReactionProgress(){
+  const s1 = stageData[1];
+  const s2 = stageData[2];
+  if(!s1.records.length) return 0;
+  
+  const targetTemp = getI('targetTemp') || 500;
+  const currentTemp = s1.records[s1.records.length-1].upperTemp;
+  const tempProgress = Math.min(currentTemp / targetTemp * 0.6, 0.6);
+  
+  let holdProgress = 0;
+  if(s2.running && s2.records.length > 0){
+    const holdDuration = (Date.now() - s2.startTime) / 60000;
+    const targetHoldTime = 60;
+    holdProgress = Math.min(holdDuration / targetHoldTime * 0.2, 0.2);
+  }
+  
+  const stageProgress = calculateStageProgress();
+  return Math.min(tempProgress + holdProgress + stageProgress, 1);
+}
+
+function calculateStageProgress(){
+  let completed = 0;
+  if(stageData[1].running) completed += 0.05;
+  if(!stageData[1].running && stageData[1].records.length > 0) completed += 0.05;
+  if(stageData[2].running) completed += 0.05;
+  if(!stageData[2].running && stageData[2].records.length > 0) completed += 0.05;
+  if(stageData[3].running) completed += 0.025;
+  if(!stageData[3].running && stageData[3].records.length > 0) completed += 0.025;
+  if(stageData[4].running) completed += 0.025;
+  if(!stageData[4].running && stageData[4].records.length > 0) completed += 0.025;
+  return completed;
+}
+
+function calculateHeatingRate(){
+  const s1 = stageData[1];
+  if(s1.records.length < 2) return 0;
+  const last = s1.records[s1.records.length-1];
+  const prev = s1.records[s1.records.length-2];
+  const t1 = prev.time.split(':');
+  const t2 = last.time.split(':');
+  const timeDiff = ((parseInt(t2[0])*60 + parseInt(t2[1])) - (parseInt(t1[0])*60 + parseInt(t1[1]))) || 1;
+  const tempDiff = last.upperTemp - prev.upperTemp;
+  return tempDiff / timeDiff;
+}
+
+// ===== CHARTS =====
+let stageCharts = {};
+
+function initCharts(){
+  for(let i=1;i<=4;i++){
+    const canvas = document.getElementById('stage'+i+'Chart');
+    if(canvas && typeof Chart !== 'undefined'){
+      stageCharts[i] = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: { labels: [], datasets: [] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#eee', font: { size: 10 } } } },
+          scales: {
+            x: { ticks: { color: '#888', font: { size: 9 } }, grid: { color: '#1a3a5c' } },
+            y: { ticks: { color: '#888', font: { size: 9 } }, grid: { color: '#1a3a5c' } }
+          }
+        }
+      });
+    }
+  }
+}
+
+function updateStageCharts(){
+  for(let i=1;i<=4;i++){
+    const chart = stageCharts[i];
+    if(!chart) continue;
+    const records = stageData[i].records;
+    if(records.length === 0) continue;
+    
+    const labels = records.map(r => r.time);
+    const datasets = [];
+    
+    if(i === 1 || i === 2){
+      datasets.push({
+        label: '涓婃俯搴?,
+        data: records.map(r => r.upperTemp),
+        borderColor: '#e8a838',
+        backgroundColor: 'rgba(232,168,56,0.1)',
+        tension: 0.4,
+        fill: true
+      });
+      datasets.push({
+        label: '涓嬫俯搴?,
+        data: records.map(r => r.lowerTemp),
+        borderColor: '#4ecdc4',
+        backgroundColor: 'rgba(78,205,196,0.1)',
+        tension: 0.4,
+        fill: true
+      });
+    } else if(i === 3){
+      datasets.push({
+        label: '鍘嬪姏',
+        data: records.map(r => r.pressure),
+        borderColor: '#ff6b6b',
+        tension: 0.4
+      });
+    } else if(i === 4){
+      datasets.push({
+        label: '鍑烘补娓╁害',
+        data: records.map(r => r.temp),
+        borderColor: '#e8a838',
+        tension: 0.4
+      });
+    }
+    
+    chart.data.labels = labels;
+    chart.data.datasets = datasets;
+    chart.update();
+  }
+}
+
+// ===== THEME TOGGLE =====
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('oil_theme', next);
+  updateThemeIcon(next);
+}
+
+function loadTheme(){
+  const saved = localStorage.getItem('oil_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeIcon(saved);
+}
+
+function updateThemeIcon(theme){
+  const icon = document.getElementById('themeIcon');
+  if(icon) icon.textContent = theme === 'light' ? '馃寵' : '鈽€锔?;
+}
+
+// ===== BATCH COMPARISON =====
+function showBatchComparison(){
+  const html = '<div style="background:#16213e;border-radius:8px;padding:15px;max-width:800px">'+
+    '<h3 style="color:#e8a838;margin-top:0">鎵规瀵规瘮鍒嗘瀽</h3>'+
+    '<div style="margin-bottom:10px"><label style="color:#7fc8a9">閫夋嫨瀵规瘮鎵规锛?-3涓級锛?/label></div>'+
+    '<div id="batchCheckboxes">'+
+    workOrders.map(wo => '<label style="display:block;color:#eee;margin:4px 0"><input type="checkbox" value="'+wo.id+'" onchange="limitBatchSelection()"> '+wo.batchId+'</label>').join('')+
+    '</div>'+
+    '<button class="btn btn-success" onclick="generateComparison()" style="margin-top:10px">鐢熸垚瀵规瘮</button>'+
+    '<div id="comparisonResult" style="margin-top:15px"></div>'+
+    '</div>';
+  showModal(html);
+}
+
+function limitBatchSelection(){
+  const checked = document.querySelectorAll('#batchCheckboxes input:checked');
+  if(checked.length > 3){
+    event.target.checked = false;
+    showStatus('鏈€澶氶€夋嫨3涓壒娆?, 'warning');
+  }
+}
+
+function generateComparison(){
+  const selectedIds = Array.from(document.querySelectorAll('#batchCheckboxes input:checked')).map(cb => parseInt(cb.value));
+  if(selectedIds.length < 2){
+    showStatus('璇疯嚦灏戦€夋嫨2涓壒娆?, 'warning');
+    return;
+  }
+  
+  const selected = workOrders.filter(wo => selectedIds.includes(wo.id));
+  let html = '<table class="data-table" style="margin-top:10px"><thead><tr><th>鎵规</th><th>璁板綍鏁?/th><th>鏈俯</th></tr></thead><tbody>';
+  selected.forEach(wo => {
+    const lastTemp = wo.rows.length > 0 ? wo.rows[wo.rows.length-1].upperTemp : '--';
+    html += '<tr><td>'+wo.batchId+'</td><td>'+wo.rows.length+'</td><td>'+lastTemp+'</td></tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('comparisonResult').innerHTML = html;
+}
+
+// ===== MODAL =====
+function showModal(html){
+  const modal = document.getElementById('modalOverlay');
+  const content = document.getElementById('modalContent');
+  if(content) content.innerHTML = html;
+  if(modal) modal.style.display = 'flex';
+}
+
+function closeModal(){
+  const modal = document.getElementById('modalOverlay');
+  if(modal) modal.style.display = 'none';
+}
+
+// ===== MAINTENANCE REMINDER =====
+function checkMaintenance(){
+  const equipment = [
+    {name: '鍙嶅簲閲?, key: 'oil_maint_reactor', cycle: 30*24*3600*1000},
+    {name: '娉?, key: 'oil_maint_pump', cycle: 7*24*3600*1000},
+    {name: '鍔犵儹鍣?, key: 'oil_maint_heater', cycle: 14*24*3600*1000}
+  ];
+  
+  const now = Date.now();
+  let alerts = [];
+  
+  equipment.forEach(eq => {
+    const last = parseInt(localStorage.getItem(eq.key)) || 0;
+    const elapsed = now - last;
+    if(elapsed > eq.cycle){
+      alerts.push(eq.name + ' 闇€瑕佷繚鍏伙紙宸茶秴鏈?' + Math.floor((elapsed - eq.cycle)/86400000) + ' 澶╋級');
+    } else if(elapsed > eq.cycle * 0.8){
+      alerts.push(eq.name + ' 淇濆吇鍗冲皢鍒版湡锛堣繕鍓?' + Math.floor((eq.cycle - elapsed)/86400000) + ' 澶╋級');
+    }
+  });
+  
+  if(alerts.length > 0){
+    showStatus('缁存姢鎻愰啋: ' + alerts.join(', '), 'warning');
+  }
+}
+
+function recordMaintenance(equipment){
+  localStorage.setItem('oil_maint_' + equipment, Date.now());
+  showStatus(equipment + ' 淇濆吇璁板綍宸叉洿鏂?, 'success');
+}
+
 // ===== INIT =====
 window.onload=function(){
   document.getElementById('productionDate').valueAsDate=new Date();
@@ -1125,19 +1543,463 @@ window.onload=function(){
   loadUserData();
   loadGitHubToken();
   checkCloudConnection();
+  loadTheme();
   showPage('production');
   
-  // 启动自动功能
+  // 鍚姩鑷姩鍔熻兘
   startAutoSave();
+  startCollaboration();
   setInterval(updateClock,1000);
   updateClock();
   
-  // 5秒后自动从云端加载
+  // 5绉掑悗鑷姩浠庝簯绔姞杞?
   setTimeout(()=>{
     if(GITHUB_TOKEN){
       loadFromCloud();
     }
   },5000);
+  
+  // 妫€鏌ョ淮鎶ゆ彁閱?
+  setTimeout(checkMaintenance, 10000);
+  
+  // 鍒濆鍖栧浘琛?
+  setTimeout(initCharts, 1000);
+  
+  // 鍚姩浠〃鐩樺疄鏃舵洿鏂?
+  setInterval(updateDashboard, 5000);
+  
+  // 鍚姩缁存姢鎻愰啋妫€鏌ワ紙姣?4灏忔椂锛?
+  setInterval(checkMaintenance, 24*3600*1000);
+};
+
+// ===== CHARTS INITIALIZATION =====
+let tempChart, pressureChart, progressChart;
+
+function initCharts(){
+  const ctx1 = document.getElementById('tempChart');
+  if(ctx1 && typeof Chart !== 'undefined'){
+    tempChart = new Chart(ctx1.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: '娓╁害 (掳C)',
+          data: [],
+          borderColor: '#e8a838',
+          backgroundColor: 'rgba(232,168,56,0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#eee' } } },
+        scales: {
+          x: { ticks: { color: '#aaa' }, grid: { color: '#0f3460' } },
+          y: { ticks: { color: '#aaa' }, grid: { color: '#0f3460' } }
+        }
+      }
+    });
+  }
+  
+  const ctx2 = document.getElementById('pressureChart');
+  if(ctx2 && typeof Chart !== 'undefined'){
+    pressureChart = new Chart(ctx2.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: '鍘嬪姏 (MPa)',
+          data: [],
+          borderColor: '#ff6b6b',
+          backgroundColor: 'rgba(255,107,107,0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#eee' } } },
+        scales: {
+          x: { ticks: { color: '#aaa' }, grid: { color: '#0f3460' } },
+          y: { ticks: { color: '#aaa' }, grid: { color: '#0f3460' } }
+        }
+      }
+    });
+  }
+  
+  const ctx3 = document.getElementById('progressChart');
+  if(ctx3 && typeof Chart !== 'undefined'){
+    progressChart = new Chart(ctx3.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: '杩涘害 (%)',
+          data: [],
+          borderColor: '#4ecdc4',
+          backgroundColor: 'rgba(78,205,196,0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#eee' } } },
+        scales: {
+          x: { ticks: { color: '#aaa' }, grid: { color: '#0f3460' } },
+          y: { ticks: { color: '#aaa' }, grid: { color: '#0f3460' } }
+        }
+      }
+    });
+  }
+}
+
+// ===== UPDATE CHARTS =====
+function updateCharts(){
+  const s1 = stageData[1];
+  if(s1.records.length > 0 && tempChart){
+    const labels = s1.records.map(r => r.time);
+    const data = s1.records.map(r => r.upperTemp);
+    tempChart.data.labels = labels;
+    tempChart.data.datasets[0].data = data;
+    tempChart.update('none');
+  }
+  
+  const s3 = stageData[3];
+  if(s3.records.length > 0 && pressureChart){
+    const labels = s3.records.map(r => r.time);
+    const data = s3.records.map(r => r.pressure);
+    pressureChart.data.labels = labels;
+    pressureChart.data.datasets[0].data = data;
+    pressureChart.update('none');
+  }
+  
+  if(progressChart){
+    const progress = calculateReactionProgress();
+    const now = new Date().toLocaleTimeString();
+    progressChart.data.labels.push(now);
+    progressChart.data.datasets[0].data.push(progress * 100);
+    if(progressChart.data.labels.length > 20){
+      progressChart.data.labels.shift();
+      progressChart.data.datasets[0].data.shift();
+    }
+    progressChart.update('none');
+  }
+}
+
+// ===== BATCH COMPARISON =====
+function showBatchComparison(){
+  const orders = JSON.parse(localStorage.getItem('oil_workOrders') || '[]');
+  if(orders.length < 2){
+    showStatus('鑷冲皯闇€瑕?涓壒娆℃墠鑳藉姣?, 'warning');
+    return;
+  }
+  
+  let html = '<div style="max-height:400px;overflow-y:auto">';
+  html += '<p style="margin-bottom:10px">璇烽€夋嫨2-3涓壒娆¤繘琛屽姣旓細</p>';
+  
+  orders.forEach((order, idx) => {
+    html += '<label style="display:block;padding:5px;cursor:pointer">';
+    html += '<input type="checkbox" class="batch-compare-check" value="' + idx + '"> ';
+    html += order.batchId + ' (' + order.createTime + ')';
+    html += '</label>';
+  });
+  
+  html += '</div>';
+  html += '<div style="margin-top:15px;text-align:center">';
+  html += '<button onclick="generateComparison()" style="padding:8px 20px;background:#e8a838;border:none;border-radius:4px;color:#1a1a2e;cursor:pointer">寮€濮嬪姣?/button>';
+  html += '</div>';
+  
+  showModal('鎵规瀵规瘮鍒嗘瀽', html);
+  
+  // 闄愬埗閫夋嫨鏁伴噺
+  document.querySelectorAll('.batch-compare-check').forEach(cb => {
+    cb.addEventListener('change', function(){
+      const checked = document.querySelectorAll('.batch-compare-check:checked');
+      if(checked.length > 3){
+        this.checked = false;
+        showStatus('鏈€澶氶€夋嫨3涓壒娆?, 'warning');
+      }
+    });
+  });
+}
+
+function generateComparison(){
+  const checked = document.querySelectorAll('.batch-compare-check:checked');
+  if(checked.length < 2){
+    showStatus('璇疯嚦灏戦€夋嫨2涓壒娆?, 'warning');
+    return;
+  }
+  
+  const orders = JSON.parse(localStorage.getItem('oil_workOrders') || '[]');
+  const selected = Array.from(checked).map(cb => orders[parseInt(cb.value)]);
+  
+  let html = '<table style="width:100%;border-collapse:collapse">';
+  html += '<tr style="background:#0f3460">';
+  html += '<th style="padding:8px;border:1px solid #1a1a2e">鎸囨爣</th>';
+  selected.forEach(order => {
+    html += '<th style="padding:8px;border:1px solid #1a1a2e">' + order.batchId + '</th>';
+  });
+  html += '</tr>';
+  
+  // 瀵规瘮椤?
+  const metrics = [
+    {name: '璁板綍鏁?, get: o => o.rows ? o.rows.length : 0},
+    {name: '鏈€缁堟俯搴?, get: o => o.rows && o.rows.length > 0 ? o.rows[o.rows.length-1].upperTemp : '--'},
+    {name: '鎬绘椂闀?, get: o => o.rows && o.rows.length > 0 ? o.rows[o.rows.length-1].time : '--'},
+    {name: '鑳借€?, get: o => o.totalEnergy || '--'},
+    {name: '浜у嚭鐜?, get: o => o.productWeight ? ((o.productWeight / o.rawMaterialWeight) * 100).toFixed(1) + '%' : '--'}
+  ];
+  
+  metrics.forEach((metric, idx) => {
+    html += '<tr style="background:' + (idx % 2 === 0 ? '#16213e' : '#1a1a2e') + '">';
+    html += '<td style="padding:8px;border:1px solid #0f3460;font-weight:bold">' + metric.name + '</td>';
+    selected.forEach(order => {
+      html += '<td style="padding:8px;border:1px solid #0f3460;text-align:center">' + metric.get(order) + '</td>';
+    });
+    html += '</tr>';
+  });
+  
+  html += '</table>';
+  
+  closeModal();
+  showModal('瀵规瘮缁撴灉', html);
+}
+
+// ===== THEME TOGGLE =====
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('oil_theme', next);
+  updateThemeIcon(next);
+}
+
+function loadTheme(){
+  const saved = localStorage.getItem('oil_theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+  updateThemeIcon(saved);
+}
+
+function updateThemeIcon(theme){
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.textContent = theme === 'dark' ? '鈽€锔? : '馃寵';
+}
+
+// ===== COLLABORATION =====
+let collaborationUsers = [];
+
+function startCollaboration(){
+  if(!currentUser) return;
+  
+  // 姣?绉掑箍鎾嚜宸辩殑鐘舵€?
+  setInterval(() => {
+    const data = {
+      user: currentUser,
+      time: Date.now(),
+      stage: getActiveStage()
+    };
+    localStorage.setItem('oil_collab_' + currentUser, JSON.stringify(data));
+    
+    // 娓呯悊杩囨湡鏁版嵁锛堣秴杩?0绉掞級
+    const now = Date.now();
+    for(let i = 0; i < localStorage.length; i++){
+      const key = localStorage.key(i);
+      if(key && key.startsWith('oil_collab_')){
+        try{
+          const item = JSON.parse(localStorage.getItem(key));
+          if(now - item.time > 30000){
+            localStorage.removeItem(key);
+          }
+        }catch(e){}
+      }
+    }
+    
+    updateCollaborationDisplay();
+  }, 5000);
+}
+
+function getActiveStage(){
+  for(let i = 1; i <= 4; i++){
+    const btn = document.getElementById('btnStage' + i);
+    if(btn && btn.textContent.includes('鍋滄')){
+      return '闃舵' + i;
+    }
+  }
+  return '绌洪棽';
+}
+
+function updateCollaborationDisplay(){
+  const users = [];
+  for(let i = 0; i < localStorage.length; i++){
+    const key = localStorage.key(i);
+    if(key && key.startsWith('oil_collab_')){
+      try{
+        const item = JSON.parse(localStorage.getItem(key));
+        users.push({user: item.user, activeStage: item.stage});
+      }catch(e){}
+    }
+  }
+  
+  collaborationUsers = users;
+  const div = document.getElementById('collabUsers');
+  if(div){
+    div.innerHTML = users.map(u => 
+      '<span style="background:#0f3460;border-radius:12px;padding:2px 8px;font-size:11px;color:#7fc8a9">' +
+      u.user + ' | ' + u.activeStage + '</span>'
+    ).join('');
+  }
+}
+
+// ===== REACTION PROGRESS =====
+function calculateReactionProgress(){
+  const s1 = stageData[1];
+  const s2 = stageData[2];
+  
+  // 鍩轰簬娓╁害杩涘害 (60%)
+  const targetTemp = 650;
+  const currentTemp = s1.records.length > 0 ? s1.records[s1.records.length-1].upperTemp : 0;
+  const tempProgress = Math.min(currentTemp / targetTemp, 1);
+  
+  // 鍩轰簬淇濇俯鏃堕暱 (20%)
+  const targetHoldTime = 60; // 鍒嗛挓
+  const holdTime = s2.records.length;
+  const holdProgress = Math.min(holdTime / targetHoldTime, 1);
+  
+  // 鍩轰簬闃舵瀹屾垚搴?(20%)
+  const stageProgress = calculateStageProgress();
+  
+  return tempProgress * 0.6 + holdProgress * 0.2 + stageProgress * 0.2;
+}
+
+function calculateStageProgress(){
+  let completed = 0;
+  for(let i = 1; i <= 4; i++){
+    const btn = document.getElementById('btnStage' + i);
+    if(btn && btn.textContent.includes('瀹屾垚')) completed++;
+  }
+  return completed / 4;
+}
+
+// ===== HEATING RATE =====
+function calculateHeatingRate(){
+  const s1 = stageData[1];
+  if(s1.records.length < 2) return 0;
+  
+  const last = s1.records[s1.records.length - 1];
+  const prev = s1.records[s1.records.length - 2];
+  
+  const tempDiff = last.upperTemp - prev.upperTemp;
+  const timeDiff = parseTime(last.time) - parseTime(prev.time);
+  
+  if(timeDiff <= 0) return 0;
+  return (tempDiff / timeDiff) * 60; // 掳C/min
+}
+
+function parseTime(timeStr){
+  const parts = timeStr.split(':');
+  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+}
+
+// ===== ENERGY EFFICIENCY =====
+function calculateEnergyEfficiency(){
+  const totalEnergy = Object.values(stageData).reduce((sum, s) => sum + s.energy, 0);
+  const productWeight = getI('productWeight');
+  
+  if(!productWeight || productWeight <= 0) return '--';
+  return (totalEnergy / productWeight).toFixed(3);
+}
+
+// ===== MODAL =====
+function showModal(title, content){
+  const overlay = document.getElementById('modalOverlay');
+  const titleEl = document.getElementById('modalTitle');
+  const bodyEl = document.getElementById('modalBody');
+  
+  if(titleEl) titleEl.textContent = title;
+  if(bodyEl) bodyEl.innerHTML = content;
+  if(overlay) overlay.style.display = 'flex';
+}
+
+function closeModal(){
+  const overlay = document.getElementById('modalOverlay');
+  if(overlay) overlay.style.display = 'none';
+}
+
+// ===== MAINTENANCE REMINDER =====
+function checkMaintenance(){
+  const equipment = [
+    {name: '鍙嶅簲閲?, key: 'oil_maint_reactor', cycle: 30*24*3600*1000},
+    {name: '娉?, key: 'oil_maint_pump', cycle: 7*24*3600*1000},
+    {name: '鍔犵儹鍣?, key: 'oil_maint_heater', cycle: 14*24*3600*1000}
+  ];
+  
+  const now = Date.now();
+  let alerts = [];
+  
+  equipment.forEach(eq => {
+    const last = parseInt(localStorage.getItem(eq.key)) || 0;
+    const elapsed = now - last;
+    if(elapsed > eq.cycle){
+      alerts.push(eq.name + ' 闇€瑕佷繚鍏伙紙宸茶秴鏈?' + Math.floor((elapsed - eq.cycle)/86400000) + ' 澶╋級');
+    } else if(elapsed > eq.cycle * 0.8){
+      alerts.push(eq.name + ' 淇濆吇鍗冲皢鍒版湡锛堣繕鍓?' + Math.floor((eq.cycle - elapsed)/86400000) + ' 澶╋級');
+    }
+  });
+  
+  if(alerts.length > 0){
+    showStatus('缁存姢鎻愰啋: ' + alerts.join(', '), 'warning');
+  }
+}
+
+function recordMaintenance(equipment){
+  localStorage.setItem('oil_maint_' + equipment, Date.now());
+  showStatus(equipment + ' 淇濆吇璁板綍宸叉洿鏂?, 'success');
+}
+
+// ===== INIT =====
+window.onload = function(){
+  document.getElementById('productionDate').valueAsDate = new Date();
+  const saved = localStorage.getItem('oil_currentUser');
+  if(saved){
+    currentUser = saved;
+    document.getElementById('loginUsername').value = saved;
+  }
+  showUserList();
+  loadUserData();
+  loadGitHubToken();
+  checkCloudConnection();
+  loadTheme();
+  showPage('production');
+  
+  // 鍚姩鑷姩鍔熻兘
+  startAutoSave();
+  startCollaboration();
+  setInterval(updateClock, 1000);
+  updateClock();
+  
+  // 5绉掑悗鑷姩浠庝簯绔姞杞?
+  setTimeout(() => {
+    if(GITHUB_TOKEN){
+      loadFromCloud();
+    }
+  }, 5000);
+  
+  // 妫€鏌ョ淮鎶ゆ彁閱?
+  setTimeout(checkMaintenance, 10000);
+  
+  // 鍒濆鍖栧浘琛?
+  setTimeout(initCharts, 1000);
+  
+  // 鍚姩浠〃鐩樺疄鏃舵洿鏂?
+  setInterval(updateDashboard, 5000);
+  
+  // 鍚姩缁存姢鎻愰啋妫€鏌ワ紙姣?4灏忔椂锛?
+  setInterval(checkMaintenance, 24*3600*1000);
 };
 </script>
 </body>
