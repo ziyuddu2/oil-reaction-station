@@ -134,7 +134,52 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 .lang-btn{padding:3px 8px;border:1px solid #0f3460;border-radius:4px;background:transparent;color:#888;cursor:pointer;font-size:11px}
 .lang-btn.active{background:#e8a838;color:#1a1a2e;border-color:#e8a838}
 .recipe-ver-select{background:#1a1a2e;border:1px solid #0f3460;border-radius:4px;color:#eee;font-size:11px;padding:4px 8px}
-</style>
+
+/* 升温曲线预判 */
+.temp-prediction-panel{background:#1a2a4e;border:2px solid #ffc107;border-radius:8px;padding:12px;margin-bottom:10px}
+.temp-prediction-panel h3{color:#ffc107;margin-top:0}
+.prediction-chart{height:120px;background:#0f3460;border-radius:4px;margin:8px 0;position:relative;overflow:hidden}
+.prediction-chart canvas{width:100%;height:100%}
+.prediction-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.prediction-stat{background:#0f3460;border-radius:6px;padding:8px;text-align:center}
+.prediction-stat-value{font-size:16px;font-weight:700;color:#ffc107}
+.prediction-stat-label{font-size:10px;color:#888;margin-top:2px}
+.eta-display{background:#16213e;border-radius:6px;padding:10px;margin:8px 0;text-align:center;border:1px solid #ffc107}
+.eta-time{font-size:24px;font-weight:700;color:#ffc107;font-family:'Courier New',monospace}
+.eta-label{font-size:10px;color:#888;margin-top:4px}
+.error-range{font-size:11px;color:#888;margin-top:4px}
+.error-range span{color:#ffc107}
+
+/* 换气智能计算 */
+.vent-calc-panel{background:#1a2a4e;border:2px solid #17a2b8;border-radius:8px;padding:12px;margin-bottom:10px}
+.vent-calc-panel h3{color:#17a2b8;margin-top:0}
+.vent-result{background:#0f3460;border-radius:6px;padding:12px;margin-top:10px}
+.vent-result-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #1a3a5c;font-size:12px}
+.vent-result-row:last-child{border-bottom:none}
+.vent-result-label{color:#888}
+.vent-result-value{color:#17a2b8;font-weight:700}
+.vent-result-value.highlight{color:#ffc107;font-size:14px}
+
+/* 甘特图 */
+.gantt-container{background:#16213e;border-radius:8px;padding:12px;overflow-x:auto}
+.gantt-header{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid #0f3460;margin-bottom:8px}
+.gantt-timeline{position:relative;height:40px;background:#0f3460;border-radius:4px;margin:8px 0}
+.gantt-time-marker{position:absolute;top:0;bottom:0;width:2px;background:#e8a838}
+.gantt-batch{position:relative;height:36px;background:#0f3460;border-radius:4px;margin:4px 0;cursor:pointer;display:flex;align-items:center;padding:0 8px;border-left:4px solid #e8a838;transition:all 0.2s}
+.gantt-batch:hover{background:#1a3a5c;border-left-color:#ffc107}
+.gantt-batch.reaction{border-left-color:#28a745}
+.gantt-batch.prep{border-left-color:#ffc107}
+.gantt-batch-label{font-size:11px;font-weight:600;color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gantt-batch-time{font-size:10px;color:#888;margin-left:auto}
+.gantt-add-btn{background:#0f3460;border:1px dashed #e8a838;border-radius:4px;padding:8px;text-align:center;color:#888;cursor:pointer;font-size:11px;margin:4px 0;transition:all 0.2s}
+.gantt-add-btn:hover{background:#1a3a5c;color:#e8a838}
+.gantt-edit-row{display:flex;gap:8px;align-items:center;background:#1a3a5c;border-radius:4px;padding:6px 8px;margin:2px 0}
+.gantt-edit-row input{background:#1a1a2e;border:1px solid #0f3460;border-radius:4px;color:#eee;font-size:11px;padding:4px 6px;width:80px}
+.gantt-edit-row label{color:#888;font-size:10px;min-width:60px}
+.gantt-edit-row .duration-input{width:60px}
+.gantt-batch.dragging{opacity:0.5;cursor:grabbing}
+.gantt-batch.drag-over{border:2px dashed #ffc107}
+
 </head>
 <body>
 <div class="offline-banner" id="offlineBanner">⚠ 当前处于离线模式，操作将暂存在本地，网络恢复后自动同步</div>
@@ -199,6 +244,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <button class="nav-btn" onclick="showPage('workorder')" id="navWorkOrder">工单管理</button>
 <button class="nav-btn" onclick="showPage('cloud')" id="navCloud">云端数据</button>
 <button class="nav-btn" onclick="showPage('recipe')" id="navRecipe">配方管理</button>
+<button class="nav-btn" onclick="showPage('gantt')" id="navGantt">排产甘特图</button>
 </div>
 <div class="nav-right">
 <span style="color:#7fc8a9;font-family:'Courier New',monospace;font-size:13px" id="liveClock">----</span>
@@ -294,6 +340,46 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <div class="form-row">
 <div class="form-group"><label>目标温度 (C)</label><input type="number" id="targetTemp" step="0.1" placeholder="500" oninput="updateTempDisplay()"></div>
 <div class="form-group"><label>温升率 (C/min)</label><input type="number" id="tempRateInput" step="0.1" placeholder="0" readonly style="background:#0f3460;color:#888"></div>
+</div>
+</div>
+
+<!-- 升温曲线预判面板 -->
+<div class="temp-prediction-panel" id="tempPredictionPanel">
+<h3>升温曲线预判</h3>
+<div class="form-row">
+<div class="form-group"><label>历史数据点数</label><input type="number" id="predDataPoints" value="10" min="3" max="50" onchange="updateTempPrediction()"></div>
+<div class="form-group"><label>误差范围 (min)</label><input type="number" id="predErrorRange" value="5" min="1" max="30" onchange="updateTempPrediction()"></div>
+</div>
+<div class="prediction-chart" id="predictionChart"><canvas id="predChartCanvas"></canvas></div>
+<div class="eta-display">
+<div class="eta-time" id="etaToTarget">--:--:--</div>
+<div class="eta-label">预计到达目标温度时间</div>
+<div class="error-range">误差范围: <span id="etaErrorRange">±5</span> 分钟</div>
+</div>
+<div class="prediction-stats">
+<div class="prediction-stat"><div class="prediction-stat-value" id="predCurrentRate">--</div><div class="prediction-stat-label">当前温升率 (C/min)</div></div>
+<div class="prediction-stat"><div class="prediction-stat-value" id="predRemainingTemp">--</div><div class="prediction-stat-label">剩余温度 (C)</div></div>
+<div class="prediction-stat"><div class="prediction-stat-value" id="predConfidence">--%</div><div class="prediction-stat-label">预测置信度</div></div>
+</div>
+</div>
+
+<!-- 换气智能计算面板 -->
+<div class="vent-calc-panel">
+<h3>换气次数智能推荐</h3>
+<div class="form-row">
+<div class="form-group"><label>反应釜容积 (L)</label><input type="number" id="ventVolume" step="1" placeholder="1000" value="1000" onchange="calculateVentilation()"></div>
+<div class="form-group"><label>当前含氧量 (%)</label><input type="number" id="ventCurrentO2" step="0.1" placeholder="21.0" value="21.0" onchange="calculateVentilation()"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>目标含氧量 (%)</label><input type="number" id="ventTargetO2" step="0.1" placeholder="0.5" value="0.5" onchange="calculateVentilation()"></div>
+<div class="form-group"><label>泵功率 (KW)</label><input type="number" id="ventPumpPower" step="0.1" placeholder="5.0" value="5.0" onchange="calculateVentilation()"></div>
+</div>
+<div class="vent-result">
+<div class="vent-result-row"><span class="vent-result-label">所需换气次数</span><span class="vent-result-value highlight" id="ventCycles">--</span> 次</div>
+<div class="vent-result-row"><span class="vent-result-label">单次换气时间</span><span class="vent-result-value" id="ventSingleTime">--</span> 分钟</div>
+<div class="vent-result-row"><span class="vent-result-label">总换气时间</span><span class="vent-result-value" id="ventTotalTime">--</span> 分钟</div>
+<div class="vent-result-row"><span class="vent-result-label">换气能耗</span><span class="vent-result-value" id="ventEnergy">--</span> KWh</div>
+<div class="vent-result-row"><span class="vent-result-label">换气效率</span><span class="vent-result-value" id="ventEfficiency">--</span> %</div>
 </div>
 </div>
 
@@ -848,15 +934,19 @@ function showPage(page){
   document.getElementById('pageWorkOrder').style.display=page==='workorder'?'block':'none';
   document.getElementById('pageCloud').style.display=page==='cloud'?'block':'none';
   const pr=document.getElementById('pageRecipe');if(pr)pr.style.display=page==='recipe'?'block':'none';
+  const pg=document.getElementById('pageGantt');if(pg)pg.style.display=page==='gantt'?'block':'none';
   document.getElementById('navProduction').className='nav-btn'+(page==='production'?' active':'');
   document.getElementById('navDashboard').className='nav-btn'+(page==='dashboard'?' active':'');
   document.getElementById('navWorkOrder').className='nav-btn'+(page==='workorder'?' active':'');
   document.getElementById('navCloud').className='nav-btn'+(page==='cloud'?' active':'');
   const nr=document.getElementById('navRecipe');if(nr)nr.className='nav-btn'+(page==='recipe'?' active':'');
+  const ng=document.getElementById('navGantt');if(ng)ng.className='nav-btn'+(page==='gantt'?' active':'');
   
   if(page==='cloud') loadCloudHistory();
   if(page==='dashboard') updateDashboard();
   if(page==='recipe'){renderRecipeList();const p=document.getElementById('recipeVersionPanel');if(p)p.style.display='none';}
+  if(page==='gantt') initGantt();
+}
 
 // ===== TEMPERATURE CONTROL PANEL =====
 function updateTempDisplay(){
@@ -984,6 +1074,7 @@ function inputStage(n){
     }
     updateTempDisplay();
     updateStage1Diff();
+    updateTempPrediction();
   }
   else if(n===2){
     const pw=getI('stage2Power'),ht=getI('stage2HoldTemp'),upper=getI('stage2UpperTemp'),lower=getI('stage2LowerTemp');
@@ -1896,7 +1987,409 @@ window.onload=function(){
   setInterval(checkMaintenance, 24*3600*1000);
 };
 
-}</script>
+// ===== TEMPERATURE PREDICTION =====
+let tempHistory = []; // {time, temp}
+
+function updateTempPrediction(){
+  const s1 = stageData[1];
+  if(!s1 || s1.records.length < 2){
+    document.getElementById('predCurrentRate').textContent = '--';
+    document.getElementById('predRemainingTemp').textContent = '--';
+    document.getElementById('predConfidence').textContent = '--%';
+    document.getElementById('etaToTarget').textContent = '--:--:--';
+    return;
+  }
+  
+  const records = s1.records;
+  const maxPoints = parseInt(document.getElementById('predDataPoints').value) || 10;
+  const errorRange = parseInt(document.getElementById('predErrorRange').value) || 5;
+  const target = getI('targetTemp') || getI('stage1TargetTemp') || 500;
+  
+  // 计算温升率（最近N个数据点）
+  const recentRecords = records.slice(-maxPoints);
+  if(recentRecords.length < 2){
+    document.getElementById('predCurrentRate').textContent = '--';
+    return;
+  }
+  
+  const first = recentRecords[0];
+  const last = recentRecords[recentRecords.length - 1];
+  
+  // 解析时间差（分钟）
+  const t1 = first.time.split(':');
+  const t2 = last.time.split(':');
+  const mins = (parseInt(t2[0]) * 60 + parseInt(t2[1])) - (parseInt(t1[0]) * 60 + parseInt(t1[1]));
+  const actualMins = mins > 0 ? mins : 1;
+  
+  const tempDiff = last.upperTemp - first.upperTemp;
+  const rate = tempDiff / actualMins; // C/min
+  const currentTemp = last.upperTemp;
+  const remaining = target - currentTemp;
+  
+  // 预测到达时间
+  let etaMins = 0;
+  let etaStr = '--:--:--';
+  let confidence = 0;
+  
+  if(rate > 0 && remaining > 0){
+    etaMins = remaining / rate;
+    const now = new Date();
+    const eta = new Date(now.getTime() + etaMins * 60000);
+    etaStr = eta.toTimeString().substr(0, 8);
+    
+    // 置信度计算：基于数据点数量和数据一致性
+    confidence = Math.min(95, 50 + (recentRecords.length * 3) - Math.abs(rate - 2) * 5);
+  } else if(rate <= 0){
+    etaStr = '已恒温';
+    confidence = 100;
+  } else {
+    etaStr = '已到达';
+    confidence = 100;
+  }
+  
+  document.getElementById('predCurrentRate').textContent = rate.toFixed(2);
+  document.getElementById('predRemainingTemp').textContent = remaining > 0 ? remaining.toFixed(1) : '0';
+  document.getElementById('predConfidence').textContent = confidence.toFixed(0) + '%';
+  document.getElementById('etaToTarget').textContent = etaStr;
+  document.getElementById('etaErrorRange').textContent = '±' + (errorRange + Math.abs(etaMins * 0.1)).toFixed(0);
+  
+  // 绘制预测曲线
+  drawPredictionChart(rate, target, currentTemp);
+}
+
+function drawPredictionChart(rate, target, currentTemp){
+  const canvas = document.getElementById('predChartCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.parentElement.clientWidth || 300;
+  const h = 120;
+  canvas.width = w;
+  canvas.height = h;
+  
+  ctx.fillStyle = '#0f3460';
+  ctx.fillRect(0, 0, w, h);
+  
+  // 绘制网格
+  ctx.strokeStyle = '#1a3a5c';
+  ctx.lineWidth = 0.5;
+  for(let i = 0; i <= 4; i++){
+    ctx.beginPath();
+    ctx.moveTo(0, h * i / 4);
+    ctx.lineTo(w, h * i / 4);
+    ctx.stroke();
+  }
+  
+  if(rate <= 0 || target <= currentTemp) return;
+  
+  // 绘制预测曲线
+  const maxMins = Math.min(300, (target - currentTemp) / rate + 60);
+  ctx.strokeStyle = '#ffc107';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  
+  for(let m = 0; m <= maxMins; m += 5){
+    const temp = currentTemp + rate * m;
+    if(temp > target) break;
+    const x = (m / maxMins) * w;
+    const y = h - ((temp - currentTemp) / (target - currentTemp)) * (h - 10) - 5;
+    if(m === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  
+  // 绘制目标线
+  ctx.strokeStyle = '#28a745';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(0, 5);
+  ctx.lineTo(w, 5);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // 标注
+  ctx.fillStyle = '#ffc107';
+  ctx.font = '10px sans-serif';
+  ctx.fillText('预测', w - 40, h - 10);
+  ctx.fillStyle = '#28a745';
+  ctx.fillText('目标:' + target + 'C', 5, 12);
+}
+
+// ===== VENTILATION CALCULATION =====
+function calculateVentilation(){
+  const volume = parseFloat(document.getElementById('ventVolume').value) || 1000; // L
+  const currentO2 = parseFloat(document.getElementById('ventCurrentO2').value) || 21; // %
+  const targetO2 = parseFloat(document.getElementById('ventTargetO2').value) || 0.5; // %
+  const pumpPower = parseFloat(document.getElementById('ventPumpPower').value) || 5; // KW
+  
+  if(currentO2 <= targetO2){
+    document.getElementById('ventCycles').textContent = '0';
+    document.getElementById('ventSingleTime').textContent = '0';
+    document.getElementById('ventTotalTime').textContent = '0';
+    document.getElementById('ventEnergy').textContent = '0';
+    document.getElementById('ventEfficiency').textContent = '100';
+    return;
+  }
+  
+  // 换气次数计算（稀释法）
+  // 每1次换气：O2_new = O2_old * (1 - 换气率)
+  // 换气率 ≈ 1 - e^(-换气量/容积)
+  // 简化：每次换气约降低 60-70%（取决于气体混合效率）
+  const exhaustEfficiency = 0.65; // 单次换气效率
+  
+  // 计算所需换气次数
+  let cycles = 0;
+  let o2 = currentO2;
+  while(o2 > targetO2 && cycles < 50){
+    o2 = o2 * (1 - exhaustEfficiency);
+    cycles++;
+  }
+  
+  // 单次换气时间（基于泵功率和容积）
+  // 假设：功率越大，换气越快
+  // 1000L容积，5KW泵 ≈ 10分钟单次换气
+  const baseTime = (volume / 1000) * (5 / pumpPower) * 10; // 分钟
+  const singleTime = baseTime.toFixed(1);
+  const totalTime = (baseTime * cycles).toFixed(0);
+  const energy = (pumpPower * baseTime * cycles / 60).toFixed(2); // KWh
+  const efficiency = Math.min(100, (cycles * exhaustEfficiency * 100 / Math.log(currentO2 / targetO2))).toFixed(0);
+  
+  document.getElementById('ventCycles').textContent = cycles;
+  document.getElementById('ventSingleTime').textContent = singleTime;
+  document.getElementById('ventTotalTime').textContent = totalTime;
+  document.getElementById('ventEnergy').textContent = energy;
+  document.getElementById('ventEfficiency').textContent = efficiency;
+}
+
+// ===== GANTT CHART =====
+let ganttBatches = []; // {id, name, startTime, reactionTime, prepTime, priority}
+
+function initGantt(){
+  const saved = localStorage.getItem('oil_gantt_batches');
+  if(saved){
+    ganttBatches = JSON.parse(saved);
+  }
+  updateGanttDate();
+  renderGantt();
+}
+
+function updateGanttDate(){
+  const today = new Date();
+  document.getElementById('ganttDateDisplay').textContent = today.toLocaleDateString('zh-CN', {weekday:'short', month:'short', day:'numeric'});
+}
+
+function renderGantt(){
+  const container = document.getElementById('ganttBatches');
+  if(!container) return;
+  
+  if(ganttBatches.length === 0){
+    container.innerHTML = '<div style="color:#888;text-align:center;padding:20px">暂无排程，点击下方添加批次</div>';
+    updateGanttStats();
+    return;
+  }
+  
+  // 按开始时间排序
+  const sorted = [...ganttBatches].sort((a, b) => a.startTime - b.startTime);
+  
+  let html = '';
+  sorted.forEach((batch, idx) => {
+    const totalMins = batch.reactionTime + batch.prepTime;
+    const endTime = batch.startTime + totalMins;
+    
+    // 计算位置和宽度
+    const workStart = timeToMins(document.getElementById('ganttStartTime').value);
+    const workHours = parseInt(document.getElementById('ganttWorkHours').value) || 12;
+    const totalWorkMins = workHours * 60;
+    
+    const left = (batch.startTime / totalWorkMins) * 100;
+    const width = (totalMins / totalWorkMins) * 100;
+    
+    html += `<div class="gantt-batch" draggable="true" data-id="${batch.id}" data-idx="${idx}"
+      style="left:${Math.max(0, left)}%;width:${Math.min(100-left, width)}%"
+      ondragstart="ganttDragStart(event)" ondragover="ganttDragOver(event)" ondrop="ganttDrop(event)" ondragend="ganttDragEnd(event)">
+      <span class="gantt-batch-label">${batch.name}</span>
+      <span class="gantt-batch-time">${fmtMins(batch.startTime)}-${fmtMins(endTime)}</span>
+    </div>`;
+  });
+  
+  container.innerHTML = html;
+  updateGanttStats();
+}
+
+function addGanttBatch(){
+  const name = prompt('输入批次名称（如: 批次A）:', '批次' + (ganttBatches.length + 1));
+  if(!name) return;
+  
+  const reactionTime = parseInt(document.getElementById('ganttDefaultReaction').value) || 180;
+  const prepTime = parseInt(document.getElementById('ganttDefaultPrep').value) || 30;
+  
+  // 自动安排到上一个批次结束后
+  let startTime = timeToMins(document.getElementById('ganttStartTime').value);
+  if(ganttBatches.length > 0){
+    const last = ganttBatches.reduce((a, b) => (a.startTime + a.reactionTime + a.prepTime) > (b.startTime + b.reactionTime + b.prepTime) ? a : b);
+    startTime = last.startTime + last.reactionTime + last.prepTime;
+  }
+  
+  const batch = {
+    id: Date.now(),
+    name: name,
+    startTime: startTime,
+    reactionTime: reactionTime,
+    prepTime: prepTime,
+    priority: ganttBatches.length
+  };
+  
+  ganttBatches.push(batch);
+  saveGanttBatches();
+  renderGantt();
+  showStatus('已添加批次: ' + name, 'success');
+}
+
+function updateGanttBatch(id){
+  const batch = ganttBatches.find(b => b.id === id);
+  if(!batch) return;
+  
+  const newName = prompt('修改批次名称:', batch.name);
+  if(newName) batch.name = newName;
+  
+  const newReaction = prompt('反应时间 (min):', batch.reactionTime);
+  if(newReaction) batch.reactionTime = parseInt(newReaction) || batch.reactionTime;
+  
+  const newPrep = prompt('准备时间 (min):', batch.prepTime);
+  if(newPrep) batch.prepTime = parseInt(newPrep) || batch.prepTime;
+  
+  saveGanttBatches();
+  renderGantt();
+}
+
+function deleteGanttBatch(id){
+  if(!confirm('确定删除此批次？')) return;
+  ganttBatches = ganttBatches.filter(b => b.id !== id);
+  saveGanttBatches();
+  renderGantt();
+  showStatus('已删除批次', 'info');
+}
+
+function saveGanttBatches(){
+  localStorage.setItem('oil_gantt_batches', JSON.stringify(ganttBatches));
+}
+
+function updateGanttStats(){
+  const totalBatches = ganttBatches.length;
+  const totalTime = ganttBatches.reduce((sum, b) => sum + b.reactionTime + b.prepTime, 0);
+  const workHours = parseInt(document.getElementById('ganttWorkHours').value) || 12;
+  const remaining = workHours * 60 - (totalTime > 0 ? ganttBatches[ganttBatches.length - 1].startTime + totalTime : 0);
+  
+  document.getElementById('ganttTotalBatches').textContent = totalBatches;
+  document.getElementById('ganttTotalTime').textContent = (totalTime / 60).toFixed(1) + 'h';
+  document.getElementById('ganttRemaining').textContent = Math.max(0, remaining / 60).toFixed(1) + 'h';
+}
+
+function autoSchedule(){
+  // 自动排程：尽可能填充工作时间段
+  const workStart = timeToMins(document.getElementById('ganttStartTime').value);
+  const workHours = parseInt(document.getElementById('ganttWorkHours').value) || 12;
+  const totalWorkMins = workHours * 60;
+  const reactionTime = parseInt(document.getElementById('ganttDefaultReaction').value) || 180;
+  const prepTime = parseInt(document.getElementById('ganttDefaultPrep').value) || 30;
+  
+  if(ganttBatches.length === 0){
+    // 添加3个默认批次
+    for(let i = 0; i < 3; i++){
+      ganttBatches.push({
+        id: Date.now() + i,
+        name: '批次' + String.fromCharCode(65 + i),
+        startTime: workStart + i * (reactionTime + prepTime),
+        reactionTime: reactionTime,
+        prepTime: prepTime,
+        priority: i
+      });
+    }
+  }
+  
+  saveGanttBatches();
+  renderGantt();
+  showStatus('自动排程完成', 'success');
+}
+
+function clearGantt(){
+  if(!confirm('确定清空所有排程？')) return;
+  ganttBatches = [];
+  saveGanttBatches();
+  renderGantt();
+  showStatus('排程已清空', 'info');
+}
+
+function timeToMins(timeStr){
+  if(!timeStr) return 0;
+  const parts = timeStr.split(':');
+  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+}
+
+function fmtMins(mins){
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+
+// Gantt drag & drop
+let dragGanttIdx = -1;
+
+function ganttDragStart(e){
+  dragGanttIdx = parseInt(e.target.dataset.idx);
+  e.target.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function ganttDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.target.closest('.gantt-batch')?.classList.add('drag-over');
+}
+
+function ganttDrop(e){
+  e.preventDefault();
+  const target = e.target.closest('.gantt-batch');
+  if(!target) return;
+  
+  const targetIdx = parseInt(target.dataset.idx);
+  if(dragGanttIdx === targetIdx) return;
+  
+  // 交换优先级
+  const batch = ganttBatches[dragGanttIdx];
+  const targetBatch = ganttBatches[targetIdx];
+  
+  const tempPriority = batch.priority;
+  batch.priority = targetBatch.priority;
+  targetBatch.priority = tempPriority;
+  
+  // 按优先级重新排序
+  ganttBatches.sort((a, b) => a.priority - b.priority);
+  
+  saveGanttBatches();
+  renderGantt();
+}
+
+function ganttDragEnd(e){
+  document.querySelectorAll('.gantt-batch').forEach(el => {
+    el.classList.remove('dragging', 'drag-over');
+  });
+  dragGanttIdx = -1;
+}
+
+// Page navigation update for Gantt
+const _origShowPage = showPage;
+showPage = function(page){
+  _origShowPage.apply(this, arguments);
+  if(page === 'gantt'){
+    initGantt();
+  }
+};
+
+// Initialize ventilation calc on load
+setTimeout(calculateVentilation, 500);
+
+</script>
 
 
 <!-- RECIPE MANAGEMENT PAGE -->
@@ -1924,6 +2417,42 @@ window.onload=function(){
 <div class="panel" id="recipeVersionPanel" style="display:none">
 <h3 id="recipeVerTitle">版本管理</h3>
 <div id="recipeVersionList"></div>
+</div>
+</div>
+
+<!-- GANTT SCHEDULING PAGE -->
+<div id="pageGantt" class="cost-page" style="display:none">
+<h2>排产甘特图</h2>
+<div style="display:grid;grid-template-columns:1fr 300px;gap:10px">
+<div>
+<div class="gantt-container" id="ganttChart">
+<div class="gantt-header">
+<span style="color:#e8a838;font-weight:600">今日生产排程</span>
+<span style="margin-left:auto;color:#888;font-size:11px" id="ganttDateDisplay">--</span>
+</div>
+<div id="ganttBatches"></div>
+<div class="gantt-add-btn" onclick="addGanttBatch()">+ 添加批次</div>
+</div>
+</div>
+<div>
+<div class="panel">
+<h3>排程设置</h3>
+<div class="form-group"><label>工作日起始时间</label><input type="time" id="ganttStartTime" value="08:00" onchange="renderGantt()"></div>
+<div class="form-group"><label>工作时长 (小时)</label><input type="number" id="ganttWorkHours" value="12" min="1" max="24" onchange="renderGantt()"></div>
+<div class="form-group"><label>默认反应时间 (min)</label><input type="number" id="ganttDefaultReaction" value="180" min="10" onchange="renderGantt()"></div>
+<div class="form-group"><label>默认准备时间 (min)</label><input type="number" id="ganttDefaultPrep" value="30" min="5" onchange="renderGantt()"></div>
+<button class="btn btn-sm btn-info" onclick="autoSchedule()" style="width:100%;margin-top:6px">自动排程</button>
+<button class="btn btn-sm btn-outline" onclick="clearGantt()" style="width:100%;margin-top:4px">清空排程</button>
+</div>
+<div class="panel">
+<h3>统计信息</h3>
+<div class="vent-result">
+<div class="vent-result-row"><span class="vent-result-label">总批次</span><span class="vent-result-value" id="ganttTotalBatches">0</span></div>
+<div class="vent-result-row"><span class="vent-result-label">预计总时长</span><span class="vent-result-value" id="ganttTotalTime">0h</span></div>
+<div class="vent-result-row"><span class="vent-result-label">剩余时间</span><span class="vent-result-value" id="ganttRemaining">0h</span></div>
+</div>
+</div>
+</div>
 </div>
 </div>
 
