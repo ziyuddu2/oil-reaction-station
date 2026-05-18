@@ -1,4 +1,4 @@
-﻿﻿﻿\uFEFF<!DOCTYPE html>
+﻿﻿﻿﻿\uFEFF<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -1535,7 +1535,50 @@ function recordMaintenance(equipment){
 }
 
 // ===== INIT =====
+// ===== DRAG (STABLE VERSION) =====
+// 用transform实现拖拽，不改变position
+let dragState={el:null,ox:0,oy:0,tx:0,ty:0};
+
+function makeDraggable(el){
+  el.style.cursor='grab';
+  el.addEventListener('mousedown',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName=='BUTTON'||e.target.tagName=='SELECT')return;
+    dragState.el=el;dragState.ox=e.clientX;dragState.oy=e.clientY;
+    dragState.tx=parseInt(el.style.transform?.replace('translate(','').replace(')','').split(',')[0]||'0');
+    dragState.ty=parseInt(el.style.transform?.replace('translate(','').replace(')','').split(',')[1]||'0');
+    el.style.cursor='grabbing';
+    el.style.zIndex='9999';
+  });
+}
+
+function initDrag(){
+  document.querySelectorAll('.stage-card,.panel,.temp-control-panel,.metrics-panel').forEach(makeDraggable);
+  document.addEventListener('mousemove',e=>{
+    if(!dragState.el)return;
+    const dx=e.clientX-dragState.ox;const dy=e.clientY-dragState.oy;
+    dragState.el.style.transform=`translate(${dragState.tx+dx}px,${dragState.ty+dy}px)`;
+  });
+  document.addEventListener('mouseup',()=>{
+    if(dragState.el){
+      dragState.el.style.cursor='grab';dragState.el.style.zIndex='';
+      const key='oil_drag_'+dragState.el.className.split(' ')[0];
+      localStorage.setItem(key,dragState.el.style.transform);
+      dragState.el=null;
+    }
+  });
+}
+
+function loadSavedPositions(){
+  document.querySelectorAll('.stage-card,.panel,.temp-control-panel,.metrics-panel').forEach(el=>{
+    const key='oil_drag_'+el.className.split(' ')[0];
+    const saved=localStorage.getItem(key);
+    if(saved)el.style.transform=saved;
+  });
+}
+
 window.onload=function(){
+  loadSavedPositions();
+  initDrag();
   document.getElementById('productionDate').valueAsDate=new Date();
   const saved=localStorage.getItem('oil_currentUser');
   if(saved){currentUser=saved;document.getElementById('loginUsername').value=saved;}
