@@ -1,9 +1,9 @@
-﻿﻿﻿﻿\uFEFF<!DOCTYPE html>
+﻿﻿﻿\uFEFF<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>油化反应指导工作站 v3.4</title>
+<title>油化反应指导工作站 v3.0</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Microsoft YaHei","Segoe UI",Arial,sans-serif;background:#1a1a2e;padding:10px;color:#eee;font-size:13px}
@@ -108,10 +108,6 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 [data-theme="light"] .data-table td{border-color:#ddd;color:#333}
 [data-theme="light"] .nav-btn{background:#e0e0e0;color:#666}
 [data-theme="light"] .nav-btn.active{background:#d4891a;color:#fff}
-[data-theme="light"] .form-group input,[data-theme="light"] .form-group textarea,[data-theme="light"] .form-group select{background:#f0f0f0;border-color:#ccc;color:#333}
-[data-theme="light"] .login-box input{background:#fff;border-color:#ccc;color:#333}
-[data-theme="light"] .stage-card{background:#fff;border-color:#ddd}
-[data-theme="light"] .panel{background:#fff;border-color:#ddd}
 
 /* 动画效果 */
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(40,167,69,0.4)}70%{box-shadow:0 0 0 10px rgba(40,167,69,0)}100%{box-shadow:0 0 0 0 rgba(40,167,69,0)}}
@@ -124,7 +120,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <!-- LOGIN -->
 <div class="login-overlay" id="loginOverlay">
 <div class="login-box">
-<h2 style="text-align:center;margin-bottom:20px;color:#e8a838">油化反应指导工作站 v3.4</h2>
+<h2 style="text-align:center;margin-bottom:20px;color:#e8a838">油化反应指导工作站 v3.0</h2>
 <p style="color:#888;margin-bottom:16px">请输入用户名进入系统</p>
 <input type="text" id="loginUsername" placeholder="输入用户名..." onkeydown="if(event.key==='Enter')loginUser()">
 <div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn" style="flex:1;background:#e8a838;color:#1a1a2e" onclick="loginUser()">登录 / 注册</button></div>
@@ -134,8 +130,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 
 <!-- MAIN APP -->
 <div class="container" id="mainApp" style="display:none">
-<h1>油化反应指导工作站 v3.4</h1>
-<div style="margin-bottom:10px"><select id="gaugeSelect" onchange="updateGaugeDisplay()" style="background:#16213e;color:#eee;padding:5px;border:1px solid #0f3460;border-radius:4px"><option value="temp">温度 (0-1000C)</option><option value="pressure">压力 (0-10MPa)</option><option value="progress">进度 (0-100%)</option></select></div>
+<h1>油化反应指导工作站 v3.0</h1>
 <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center">
 <div style="flex:1;background:#16213e;border-radius:8px;padding:10px;border:1px solid #0f3460">
 <div style="display:flex;justify-content:space-around;align-items:center">
@@ -221,7 +216,8 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 </div>
 
 <div class="panel"><h2>产出数据</h2>
-<div class="form-row"><div class="form-group"><label>产品毛重 (kg)</label><input type="number" id="productWeight" step="0.001" placeholder="0.000"></div><div class="form-group"><label>产出毛重 (kg)</label><input type="number" id="sampleWeight" step="0.1" placeholder="0.0"></div></div>
+<div class="form-row"><div class="form-group"><label>产品重量 (kg)</label><input type="number" id="productWeight" step="0.001" placeholder="0.000"></div><div class="form-group"><label>取样重量 (g)</label><input type="number" id="sampleWeight" step="0.1" placeholder="0.0"></div></div>
+<div class="form-row"><div class="form-group"><label>实验室处理后 (g)</label><input type="number" id="labWeight" step="0.01" placeholder="0.00"></div><div class="form-group"><label>反应电流 (Ah)</label><input type="number" id="reactionAh" step="1" placeholder="0"></div></div>
 <button class="btn btn-info" onclick="calculateOutput()" style="width:100%">计算产出</button>
 </div>
 
@@ -290,8 +286,9 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <div class="temp-diff-label">温差 (上温 - 下温) C</div>
 </div>
 <div class="form-group"><label>终点温度 (C)</label><input type="number" id="stage1TargetTemp" step="0.1" placeholder="500" oninput="updateTempDisplay()"></div>
-<div class="form-row"><div class="form-group"><label>电压 (V)</label><input type="number" id="stage1Voltage" step="1" value="400"></div><div class="form-group"><label>电流 (A)</label><input type="number" id="stage1Current" step="0.1" placeholder="110" oninput="updateStage1Power()"></div></div>
-<div class="form-row"><div class="form-group"><label>占空比</label><input type="number" id="stage1Duty" step="0.01" min="0" max="1" placeholder="1.0"></div><div class="form-group"><label>实时功率 (KW)</label><input type="number" id="stage1Power" step="0.1" placeholder="计算值" readonly style="background:#0f3460;color:#e8a838"></div></div>
+<div class="form-group"><label>加热功率 (KW)</label><input type="number" id="stage1Power" step="0.1" placeholder="50"></div>
+<div class="form-group"><label>电流 (A)</label><input type="number" id="stage1Current" step="0.1" placeholder="110"></div>
+<div class="form-group"><label>频率 (Hz)</label><input type="number" id="stage1Freq" step="0.1" placeholder="10.5"></div>
 <div class="data-row"><span class="data-label">实时功率:</span><span class="data-value" id="stage1Pwr">-- KW</span></div>
 <div class="data-row"><span class="data-label">累计能耗:</span><span class="data-value hl" id="stage1En">-- KWh</span></div>
 <div class="data-row"><span class="data-label">实时能耗:</span><span class="data-value" id="stage1LiveEn" style="color:#17a2b8">-- KWh</span></div>
@@ -309,8 +306,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <div class="stage-title">保温工艺</div>
 <div class="stage-status idle" id="stage2Status">未开始</div>
 <div class="timer" id="stage2Timer">00:00:00</div>
-<div class="form-row"><div class="form-group"><label>电压 (V)</label><input type="number" id="stage2Voltage" step="1" value="400"></div><div class="form-group"><label>电流 (A)</label><input type="number" id="stage2Current" step="0.1" placeholder="0" oninput="updateStage2Power()"></div></div>
-<div class="form-row"><div class="form-group"><label>占空比</label><input type="number" id="stage2Duty" step="0.01" min="0" max="1" placeholder="1.0"></div><div class="form-group"><label>实时功率 (KW)</label><input type="number" id="stage2Power" step="0.1" placeholder="计算值" readonly style="background:#0f3460;color:#e8a838"></div></div>
+<div class="form-group"><label>保温功率 (KW)</label><input type="number" id="stage2Power" step="0.1" placeholder="输入保温功率"></div>
 <div class="form-group"><label>保温温度 (C)</label><input type="number" id="stage2HoldTemp" step="0.1" placeholder="420"></div>
 <div class="form-row">
 <div class="form-group"><label>上温度 (C)</label><input type="number" id="stage2UpperTemp" step="0.1" placeholder="0" oninput="updateStage2Diff()"></div>
@@ -337,7 +333,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <div class="stage-status idle" id="stage3Status">未开始</div>
 <div class="timer" id="stage3Timer">00:00:00</div>
 <div class="form-group"><label>气体流量 (L/min)</label><input type="number" id="stage3GasFlow" step="0.1" placeholder="0"></div>
-<div class="form-group"><label>泵频率 (Hz)</label><input type="number" id="stage3PumpPower" step="1" min="0" max="100" placeholder="0-100"></div>
+<div class="form-group"><label>泵功率 (KW)</label><input type="number" id="stage3PumpPower" step="0.1" placeholder="0"></div>
 <div class="form-group"><label>压力 (MPa)</label><input type="number" id="stage3Pressure" step="0.001" placeholder="0"></div>
 <div class="form-group"><label>压差 (MPa)</label><input type="number" id="stage3PressureDiff" step="0.001" placeholder="0"></div>
 <div class="oxygen-control">
@@ -724,23 +720,6 @@ function updateStage2Diff(){
   const diff = upper - lower;
   document.getElementById('stage2Diff').textContent = (diff >= 0 ? '+' : '') + diff.toFixed(1);
   document.getElementById('stage2Diff').style.color = diff > 0 ? '#ffc107' : diff < 0 ? '#dc3545' : '#888';
-}
-
-// ===== POWER CALCULATION =====
-function updateStage1Power(){
-  const v = getI('stage1Voltage') || 400;
-  const i = getI('stage1Current') || 0;
-  const duty = getI('stage1Duty') || 1;
-  const pw = (v * i / 1000) * duty;
-  document.getElementById('stage1Power').value = pw.toFixed(2);
-}
-
-function updateStage2Power(){
-  const v = getI('stage2Voltage') || 400;
-  const i = getI('stage2Current') || 0;
-  const duty = getI('stage2Duty') || 1;
-  const pw = (v * i / 1000) * duty;
-  document.getElementById('stage2Power').value = pw.toFixed(2);
 }
 
 // ===== LOGIN SYSTEM =====
@@ -1311,19 +1290,6 @@ function updateDashboard(){
   updateStageCharts();
 }
 
-function updateGaugeDisplay(){
-  const sel=document.getElementById('gaugeSelect').value;
-  const temp=getI('stage1CurrentTemp')||0;
-  const pressure=getI('stage3Pressure')||0;
-  const progress=calculateReactionProgress();
-  const val=sel==='temp'?temp.toFixed(1):sel==='pressure'?pressure.toFixed(2):progress.toFixed(1)+'%';
-  document.getElementById('gaugeTemp').textContent=val;
-  // Update gauge rotation based on selected type
-  const max=sel==='temp'?1000:sel==='pressure'?10:100;
-  const current=sel==='temp'?temp:sel==='pressure'?pressure:progress;
-  document.getElementById('tempGauge').style.transform='rotate('+Math.min(current/max*360,360)+'deg)';
-}
-
 function updateGauges(temp, pressure, progress){
   // 温度仪表盘 (0-1000C)
   const tempAngle = Math.min(temp / 1000 * 360, 360);
@@ -1491,7 +1457,7 @@ function showBatchComparison(){
     '<h3 style="color:#e8a838;margin-top:0">批次对比分析</h3>'+
     '<div style="margin-bottom:10px"><label style="color:#7fc8a9">选择对比批次（2-3个）：</label></div>'+
     '<div id="batchCheckboxes">'+
-    workOrders.map(wo => '<label style="display:block;color:#eee;margin:4px 0"><input type="checkbox" value="'+wo.id+'" onchange="limitBatchSelection(this)"> '+wo.batchId+'</label>').join('')+
+    workOrders.map(wo => '<label style="display:block;color:#eee;margin:4px 0"><input type="checkbox" value="'+wo.id+'" onchange="limitBatchSelection()"> '+wo.batchId+'</label>').join('')+
     '</div>'+
     '<button class="btn btn-success" onclick="generateComparison()" style="margin-top:10px">生成对比</button>'+
     '<div id="comparisonResult" style="margin-top:15px"></div>'+
@@ -1499,10 +1465,10 @@ function showBatchComparison(){
   showModal(html);
 }
 
-function limitBatchSelection(el){
+function limitBatchSelection(){
   const checked = document.querySelectorAll('#batchCheckboxes input:checked');
   if(checked.length > 3){
-    el.checked = false;
+    event.target.checked = false;
     showStatus('最多选择3个批次', 'warning');
   }
 }
@@ -1569,34 +1535,7 @@ function recordMaintenance(equipment){
 }
 
 // ===== INIT =====
-// ===== DRAG PANELS =====
-function savePanelPositions(){
-  document.querySelectorAll('.stage-card,.panel,.temp-control-panel,.metrics-panel').forEach((el,i)=>{
-    localStorage.setItem('oil_panel_'+i, el.style.top+';'+el.style.left);
-  });
-}
-function loadPanelPositions(){
-  document.querySelectorAll('.stage-card,.panel,.temp-control-panel,.metrics-panel').forEach((el,i)=>{
-    const pos=localStorage.getItem('oil_panel_'+i);if(pos){const [t,l]=pos.split(';');el.style.position='fixed';el.style.top=t;el.style.left=l;}
-  });
-}
-function makeDraggable(el){
-  let dragging=null,ox=0,oy=0;
-  el.style.cursor='move';
-  el.addEventListener('mousedown',e=>{
-    if(e.target.tagName==='INPUT'||e.target.tagName=='BUTTON')return;
-    dragging=el;const r=el.getBoundingClientRect();
-    ox=e.clientX-r.left;oy=e.clientY-r.top;el.style.zIndex=9999;
-  });
-  document.addEventListener('mousemove',e=>{if(!dragging)return;
-    dragging.style.left=(e.clientX-ox)+'px';dragging.style.top=(e.clientY-oy)+'px';
-  });
-  document.addEventListener('mouseup',()=>{if(dragging){dragging.style.zIndex='';dragging=null;savePanelPositions();}});
-}
-
 window.onload=function(){
-  loadPanelPositions();
-  document.querySelectorAll('.stage-card,.panel,.temp-control-panel,.metrics-panel').forEach(makeDraggable);
   document.getElementById('productionDate').valueAsDate=new Date();
   const saved=localStorage.getItem('oil_currentUser');
   if(saved){currentUser=saved;document.getElementById('loginUsername').value=saved;}
