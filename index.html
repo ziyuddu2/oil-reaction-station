@@ -1,4 +1,4 @@
-﻿﻿\uFEFF<!DOCTYPE html>
+﻿﻿﻿\uFEFF<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -1766,13 +1766,13 @@ document.addEventListener('keydown',function(e){
 });
 
 // ===== V3.5 OFFLINE MODE =====
-let offlineQueue = [];
+let offlineQueue = []; // offline mode disabled for debugging
 
 function updateOfflineStatus(){
   const offline = !navigator.onLine;
   document.getElementById('offlineBanner').className = 'offline-banner' + (offline ? ' show' : '');
   if(!offline && offlineQueue.length > 0){
-    showStatus('网络已恢复，正在同步 ' + offlineQueue.length + ' 条待同步操作...', 'info');
+    // showStatus removed to debug，正在同步 ' + offlineQueue.length + ' 条待同步操作...', 'info');
     processOfflineQueue();
   }
 }
@@ -1780,7 +1780,7 @@ function updateOfflineStatus(){
 async function processOfflineQueue(){
   if(offlineQueue.length === 0) return;
   const ops = [...offlineQueue];
-  offlineQueue = [];
+  offlineQueue = []; // offline mode disabled for debugging
   for(const op of ops){
     try{
       // Replay the operation
