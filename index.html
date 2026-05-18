@@ -1,9 +1,9 @@
-﻿﻿﻿﻿﻿﻿\uFEFF<!DOCTYPE html>
+﻿﻿\uFEFF<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>油化反应指导工作站 v3.0</title>
+<title>油化反应指导工作站 v3.5</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Microsoft YaHei","Segoe UI",Arial,sans-serif;background:#1a1a2e;padding:10px;color:#eee;font-size:13px}
@@ -114,13 +114,34 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 .stage-card.running{animation:pulse 2s infinite}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 .metric-value{background:linear-gradient(90deg,#e8a838,#ffc107,#e8a838);background-size:200% 100%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite}
+
+/* V3.5 */
+.recipe-card{background:#0f3460;border-radius:6px;padding:8px;margin:4px 0;cursor:pointer;border:1px solid transparent;transition:all 0.2s;display:flex;justify-content:space-between;align-items:center}
+.recipe-card:hover{border-color:#e8a838}
+.recipe-card.selected{border-color:#28a745;background:#1a3a5c}
+.recipe-name{font-weight:700;color:#e8a838;font-size:13px}
+.recipe-desc{color:#888;font-size:10px}
+.recipe-version{font-size:10px;color:#7fc8a9;background:#16213e;padding:2px 6px;border-radius:10px}
+.maint-notes{background:#0f3460;border-radius:6px;padding:8px;margin-top:6px}
+.maint-notes textarea{width:100%;height:60px;background:#1a1a2e;border:1px solid #0f3460;border-radius:4px;color:#eee;font-size:11px;padding:6px;resize:vertical}
+.maint-notes-list{max-height:100px;overflow-y:auto;margin-top:6px}
+.maint-note-item{background:#16213e;border-radius:4px;padding:4px 8px;margin:2px 0;font-size:10px;display:flex;justify-content:space-between;color:#7fc8a9}
+.maint-note-time{color:#888;font-size:9px}
+.shortcut-bar{position:fixed;bottom:26px;left:0;right:0;background:rgba(0,0,0,0.85);padding:4px 10px;display:flex;gap:16px;justify-content:center;font-size:10px;color:#888;border-top:1px solid #0f3460;z-index:999}
+.shortcut-key{background:#16213e;border-radius:3px;padding:1px 6px;color:#e8a838;font-family:monospace;font-size:9px}
+.offline-banner{display:none;background:#dc3545;color:#fff;text-align:center;padding:4px;font-size:11px;font-weight:600}
+.offline-banner.show{display:block}
+.lang-btn{padding:3px 8px;border:1px solid #0f3460;border-radius:4px;background:transparent;color:#888;cursor:pointer;font-size:11px}
+.lang-btn.active{background:#e8a838;color:#1a1a2e;border-color:#e8a838}
+.recipe-ver-select{background:#1a1a2e;border:1px solid #0f3460;border-radius:4px;color:#eee;font-size:11px;padding:4px 8px}
 </style>
 </head>
 <body>
+<div class="offline-banner" id="offlineBanner">⚠ 当前处于离线模式，操作将暂存在本地，网络恢复后自动同步</div>
 <!-- LOGIN -->
 <div class="login-overlay" id="loginOverlay">
 <div class="login-box">
-<h2 style="text-align:center;margin-bottom:20px;color:#e8a838">油化反应指导工作站 v3.0</h2>
+<h2 style="text-align:center;margin-bottom:20px;color:#e8a838">油化反应指导工作站 v3.5</h2>
 <p style="color:#888;margin-bottom:16px">请输入用户名进入系统</p>
 <input type="text" id="loginUsername" placeholder="输入用户名..." onkeydown="if(event.key==='Enter')loginUser()">
 <div style="display:flex;gap:6px;margin-bottom:10px"><button class="btn" style="flex:1;background:#e8a838;color:#1a1a2e" onclick="loginUser()">登录 / 注册</button></div>
@@ -130,7 +151,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 
 <!-- MAIN APP -->
 <div class="container" id="mainApp" style="display:none">
-<h1>油化反应指导工作站 v3.0</h1>
+<h1>油化反应指导工作站 v3.5</h1>
 <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center">
 <div style="flex:1;background:#16213e;border-radius:8px;padding:10px;border:1px solid #0f3460">
 <div style="display:flex;justify-content:space-around;align-items:center">
@@ -158,11 +179,16 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 </div>
 </div>
 <div style="width:200px;background:#16213e;border-radius:8px;padding:10px;border:1px solid #0f3460">
-<h3 style="color:#e8a838;margin-top:0;font-size:12px">维护提醒</h3>
+<h3 style="color:#e8a838;margin-top:0;font-size:12px" data-i18n="maintenance">维护提醒</h3>
 <div id="maintenanceAlerts" style="font-size:11px;color:#888">
 <div style="padding:4px 0;border-bottom:1px dashed #0f3460">反应釜: 正常</div>
 <div style="padding:4px 0;border-bottom:1px dashed #0f3460">泵: 正常</div>
 <div style="padding:4px 0">加热器: 正常</div>
+</div>
+<div class="maint-notes">
+<textarea id="maintMemo" placeholder="输入维护备注..." oninput="saveMaintMemoDraft()"></textarea>
+<button class="btn btn-sm btn-info" onclick="addMaintNote()" style="margin-top:4px;width:100%">+ 添加备注</button>
+<div class="maint-notes-list" id="maintNotesList"></div>
 </div>
 </div>
 </div>
@@ -172,6 +198,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <button class="nav-btn" onclick="showPage('dashboard')" id="navDashboard">仪表盘</button>
 <button class="nav-btn" onclick="showPage('workorder')" id="navWorkOrder">工单管理</button>
 <button class="nav-btn" onclick="showPage('cloud')" id="navCloud">云端数据</button>
+<button class="nav-btn" onclick="showPage('recipe')" id="navRecipe">配方管理</button>
 </div>
 <div class="nav-right">
 <span style="color:#7fc8a9;font-family:'Courier New',monospace;font-size:13px" id="liveClock">----</span>
@@ -180,6 +207,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <span class="cloud-status offline" id="cloudStatus">离线</span>
 <button class="btn btn-sm btn-outline" onclick="toggleTheme()" title="切换主题"><span id="themeIcon">☀️</span></button>
 <button class="btn btn-sm btn-outline" onclick="switchUser()">切换</button>
+<button class="lang-btn active" onclick="switchLang('zh')" id="langZh">中</button><button class="lang-btn" onclick="switchLang('ja')" id="langJa">日</button>
 </div>
 </div>
 <div class="io-panel">
@@ -477,6 +505,65 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 </div>
 <div class="status-bar" id="statusBar"></div>
 
+
+<script>
+// ===== I18N (zh/ja) =====
+const i18n = {
+  zh: {
+    title: '油化反应指导工作站 v3.5',
+    production: '生产监控', dashboard: '仪表盘', workorder: '工单管理', cloud: '云端数据', recipe: '配方管理',
+    maintenance: '维护提醒', save: '保存', exp: '导出', help: '帮助',
+    offlinetext: '⚠ 当前处于离线模式，操作将暂存在本地，网络恢复后自动同步',
+    login: '请输入用户名进入系统', recipeName: '配方名称', recipeDesc: '配方描述', recipeTemp: '目标温度(°C)', recipeDuration: '保温时长(min)', recipeExchanges: '换气次数', recipeVersion: '版本', recipeSave: '保存配方', recipeLoad: '调用配方', recipeVersionHistory: '版本历史',
+    maintMemoPlaceholder: '输入维护备注...', addNote: '添加备注'
+  },
+  ja: {
+    title: '油化反応ガイダンスステーション v3.5',
+    production: '生産監視', dashboard: 'ダッシュボード', workorder: '作業伝票管理', cloud: 'クラウドデータ', recipe: 'レシピ管理',
+    maintenance: 'メンテナンス', save: '保存', exp: 'エクスポート', help: 'ヘルプ',
+    offlinetext: '⚠ 現在オフラインモードです、操作は一時的にローカルに保存され、ネットワーク復帰後に自動同期されます',
+    login: 'ユーザー名を入力してシステムに入る', recipeName: 'レシピ名', recipeDesc: 'レシピ説明', recipeTemp: '目標温度(°C)', recipeDuration: '保温時間(分)', recipeExchanges: '換気回数', recipeVersion: 'バージョン', recipeSave: 'レシピ保存', recipeLoad: 'レシピ呼出', recipeVersionHistory: 'バージョン履歴',
+    maintMemoPlaceholder: 'メンテナンス備考を入力...', addNote: '備考追加'
+  }
+};
+let currentLang = localStorage.getItem('oil_lang') || 'zh';
+
+function applyI18n(){
+  const t = i18n[currentLang] || i18n.zh;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(t[key]) el.textContent = t[key];
+  });
+  // Update static texts
+  const titleEl = document.querySelector('title');
+  if(titleEl) titleEl.textContent = t.title;
+  const h1El = document.querySelector('h1');
+  if(h1El) h1El.textContent = t.title;
+  document.getElementById('offlineBanner').textContent = t.offlinetext;
+  document.getElementById('shortcutBar').innerHTML =
+    '<span><span class="shortcut-key">Ctrl+S</span> ' + t.save + '</span>' +
+    '<span><span class="shortcut-key">Ctrl+E</span> ' + t.exp + '</span>' +
+    '<span><span class="shortcut-key">F1</span> ' + t.help + '</span>';
+  // Nav buttons
+  const navRecipe = document.getElementById('navRecipe');
+  if(navRecipe) navRecipe.textContent = t.recipe;
+  const maintH3 = document.querySelector('[data-i18n="maintenance"]');
+  if(maintH3) maintH3.textContent = t.maintenance;
+  const memo = document.getElementById('maintMemo');
+  if(memo) memo.placeholder = t.maintMemoPlaceholder;
+  const addBtn = document.querySelector('[onclick="addMaintNote()"]');
+  if(addBtn) addBtn.textContent = ' + ' + t.addNote;
+  // Update lang button active state
+  document.getElementById('langZh').className = 'lang-btn' + (currentLang==='zh' ? ' active' : '');
+  document.getElementById('langJa').className = 'lang-btn' + (currentLang==='ja' ? ' active' : '');
+}
+
+function switchLang(lang){
+  currentLang = lang;
+  localStorage.setItem('oil_lang', lang);
+  applyI18n();
+  showStatus('语言已切换 / 言語を切替えました: ' + lang, 'success');
+}
 <script>
 // ===== CONFIG =====
 const GITHUB_OWNER = 'ziyuddu2';
@@ -759,14 +846,16 @@ function showPage(page){
   document.getElementById('pageDashboard').style.display=page==='dashboard'?'block':'none';
   document.getElementById('pageWorkOrder').style.display=page==='workorder'?'block':'none';
   document.getElementById('pageCloud').style.display=page==='cloud'?'block':'none';
+  const pr=document.getElementById('pageRecipe');if(pr)pr.style.display=page==='recipe'?'block':'none';
   document.getElementById('navProduction').className='nav-btn'+(page==='production'?' active':'');
   document.getElementById('navDashboard').className='nav-btn'+(page==='dashboard'?' active':'');
   document.getElementById('navWorkOrder').className='nav-btn'+(page==='workorder'?' active':'');
   document.getElementById('navCloud').className='nav-btn'+(page==='cloud'?' active':'');
+  const nr=document.getElementById('navRecipe');if(nr)nr.className='nav-btn'+(page==='recipe'?' active':'');
   
   if(page==='cloud') loadCloudHistory();
   if(page==='dashboard') updateDashboard();
-}
+  if(page==='recipe'){renderRecipeList();const p=document.getElementById('recipeVersionPanel');if(p)p.style.display='none';}
 
 // ===== TEMPERATURE CONTROL PANEL =====
 function updateTempDisplay(){
@@ -1535,6 +1624,194 @@ function recordMaintenance(equipment){
 }
 
 // ===== INIT =====
+
+// ===== V3.5 RECIPE MANAGEMENT =====
+let recipes = JSON.parse(localStorage.getItem('oil_recipes') || '[]');
+
+function saveRecipe(){
+  const name = document.getElementById('recipeName').value.trim();
+  const desc = document.getElementById('recipeDesc').value.trim();
+  const temp = document.getElementById('recipeTemp').value;
+  const duration = document.getElementById('recipeDuration').value;
+  const exchanges = document.getElementById('recipeExchanges').value;
+  let version = document.getElementById('recipeVersion').value.trim() || 'V1.0';
+  if(!name){ showStatus('请输入配方名称','error'); return; }
+  // Check for existing recipe
+  const existIdx = recipes.findIndex(r=>r.name===name);
+  if(existIdx >= 0){
+    // Version control: archive old version
+    if(!recipes[existIdx].history) recipes[existIdx].history = [];
+    recipes[existIdx].history.push({
+      version: recipes[existIdx].version,
+      temp: recipes[existIdx].temp,
+      duration: recipes[existIdx].duration,
+      exchanges: recipes[existIdx].exchanges,
+      desc: recipes[existIdx].desc,
+      savedAt: recipes[existIdx].savedAt
+    });
+    recipes[existIdx].version = version;
+    recipes[existIdx].temp = temp;
+    recipes[existIdx].duration = duration;
+    recipes[existIdx].exchanges = exchanges;
+    recipes[existIdx].desc = desc;
+    recipes[existIdx].savedAt = new Date().toISOString();
+  } else {
+    recipes.push({name, desc, temp, duration, exchanges, version, savedAt: new Date().toISOString(), history: []});
+  }
+  localStorage.setItem('oil_recipes', JSON.stringify(recipes));
+  renderRecipeList();
+  showStatus('配方保存成功: ' + name + ' ' + version, 'success');
+  // Clear form
+  document.getElementById('recipeName').value = '';
+  document.getElementById('recipeDesc').value = '';
+  document.getElementById('recipeVersion').value = 'V1.0';
+}
+
+function loadRecipe(name, versionIdx){
+  const r = recipes.find(r=>r.name===name);
+  if(!r) return;
+  let data = r;
+  if(versionIdx !== undefined && r.history && r.history[versionIdx]){
+    data = r.history[versionIdx];
+  }
+  // Apply to current production
+  document.getElementById('batchId').value = (data.name + '-' + new Date().toISOString().slice(0,10));
+  showStatus('已调用配方: ' + name + (data.version ? ' ' + data.version : ''), 'success');
+  showPage('production');
+}
+
+function deleteRecipe(name){
+  if(!confirm('确定删除配方: ' + name + ' ？')) return;
+  recipes = recipes.filter(r=>r.name!==name);
+  localStorage.setItem('oil_recipes', JSON.stringify(recipes));
+  renderRecipeList();
+  showStatus('配方已删除: ' + name, 'warning');
+}
+
+function showRecipeVersions(name){
+  const r = recipes.find(r=>r.name===name);
+  if(!r) return;
+  const panel = document.getElementById('recipeVersionPanel');
+  const list = document.getElementById('recipeVersionList');
+  const title = document.getElementById('recipeVerTitle');
+  title.textContent = '版本历史: ' + name;
+  let html = '<div class="recipe-card" style="background:#1a3a5c;border-color:#e8a838"><div><div class="recipe-name">' + r.version + ' (当前)</div><div class="recipe-desc">温度:' + r.temp + ' 保温:' + r.duration + 'min 换气:' + r.exchanges + '次</div></div><div class="recipe-actions"><button class="btn btn-sm btn-success" onclick="loadRecipe(\'' + name + '\')">调用</button></div></div>';
+  if(r.history && r.history.length > 0){
+    r.history.forEach((h,i)=>{
+      html += '<div class="recipe-card"><div><div class="recipe-name">' + h.version + '</div><div class="recipe-desc">温度:' + h.temp + ' 保温:' + h.duration + 'min 换气:' + h.exchanges + '次 | ' + new Date(h.savedAt).toLocaleString('zh-CN') + '</div></div><div class="recipe-actions"><button class="btn btn-sm btn-outline" onclick="loadRecipe(\'' + name + '\',' + i + ')">调用</button></div></div>';
+    });
+  }
+  list.innerHTML = html;
+  panel.style.display = 'block';
+}
+
+function renderRecipeList(){
+  const div = document.getElementById('recipeList');
+  if(recipes.length === 0){
+    div.innerHTML = '<div style="color:#888;text-align:center;padding:20px">暂无配方</div>';
+    return;
+  }
+  let html = '';
+  recipes.forEach(r=>{
+    html += '<div class="recipe-card"><div><div class="recipe-name">' + r.name + ' <span class="recipe-version">' + r.version + '</span></div><div class="recipe-desc">' + (r.desc||'') + ' | 温度:' + r.temp + '°C 保温:' + r.duration + 'min 换气:' + r.exchanges + '次</div></div><div class="recipe-actions"><button class="btn btn-sm btn-success" onclick="loadRecipe(\'' + r.name + '\')">调用</button><button class="btn btn-sm btn-outline" onclick="showRecipeVersions(\'' + r.name + '\')">版本</button><button class="btn btn-sm" style="background:#dc3545;color:#fff" onclick="deleteRecipe(\'' + r.name + '\')">删除</button></div></div>';
+  });
+  div.innerHTML = html;
+}
+
+// ===== V3.5 MAINTENANCE MEMO =====
+function addMaintNote(){
+  const text = document.getElementById('maintMemo').value.trim();
+  if(!text) return;
+  let notes = JSON.parse(localStorage.getItem('oil_maint_notes') || '[]');
+  notes.unshift({text, time: new Date().toISOString()});
+  if(notes.length > 50) notes = notes.slice(0,50);
+  localStorage.setItem('oil_maint_notes', JSON.stringify(notes));
+  document.getElementById('maintMemo').value = '';
+  renderMaintNotes();
+  showStatus('备注已添加', 'success');
+}
+
+function saveMaintMemoDraft(){
+  localStorage.setItem('oil_maint_draft', document.getElementById('maintMemo').value);
+}
+
+function deleteMaintNote(idx){
+  let notes = JSON.parse(localStorage.getItem('oil_maint_notes') || '[]');
+  notes.splice(idx,1);
+  localStorage.setItem('oil_maint_notes', JSON.stringify(notes));
+  renderMaintNotes();
+}
+
+function renderMaintNotes(){
+  const notes = JSON.parse(localStorage.getItem('oil_maint_notes') || '[]');
+  const list = document.getElementById('maintNotesList');
+  if(notes.length===0){
+    list.innerHTML = '<div style="color:#888;font-size:10px;text-align:center;padding:6px">暂无备注</div>';
+    return;
+  }
+  let html = '';
+  notes.forEach((n,i)=>{
+    const d = new Date(n.time);
+    html += '<div class="maint-note-item">' + n.text + '<span class="maint-note-time">' + d.toLocaleString('zh-CN') + ' <a href="javascript:void(0)" onclick="deleteMaintNote(' + i + ')" style="color:#dc3545">×</a></span></div>';
+  });
+  list.innerHTML = html;
+}
+
+// ===== V3.5 KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown',function(e){
+  if(e.ctrlKey && e.key==='s'){ e.preventDefault(); showStatus('手动保存完成', 'success'); saveToLocal(); }
+  if(e.ctrlKey && e.key==='e'){ e.preventDefault(); autoExportToFile(); }
+  if(e.key==='F1'){ e.preventDefault(); alert((i18n[currentLang]||i18n.zh).help + ':\n\nCtrl+S - ' + (i18n[currentLang]||i18n.zh).save + '\nCtrl+E - ' + (i18n[currentLang]||i18n.zh).exp + '\nF1 - ' + (i18n[currentLang]||i18n.zh).help); }
+});
+
+// ===== V3.5 OFFLINE MODE =====
+let offlineQueue = [];
+
+function updateOfflineStatus(){
+  const offline = !navigator.onLine;
+  document.getElementById('offlineBanner').className = 'offline-banner' + (offline ? ' show' : '');
+  if(!offline && offlineQueue.length > 0){
+    showStatus('网络已恢复，正在同步 ' + offlineQueue.length + ' 条待同步操作...', 'info');
+    processOfflineQueue();
+  }
+}
+
+async function processOfflineQueue(){
+  if(offlineQueue.length === 0) return;
+  const ops = [...offlineQueue];
+  offlineQueue = [];
+  for(const op of ops){
+    try{
+      // Replay the operation
+      if(op.type==='sync') await syncToCloud();
+      if(op.type==='save') saveToLocal();
+      if(op.type==='memo') { addMaintNote(); }
+    }catch(e){}
+  }
+  showStatus('离线操作同步完成 (' + ops.length + '条)', 'success');
+}
+
+// Intercept save operations when offline
+const _origSyncToCloud = syncToCloud;
+syncToCloud = async function(){
+  if(!navigator.onLine){
+    offlineQueue.push({type:'sync', time: new Date().toISOString()});
+    localStorage.setItem('oil_offline_queue', JSON.stringify(offlineQueue));
+    showStatus('当前离线，数据已暂存，网络恢复后自动同步', 'warning');
+    return;
+  }
+  return _origSyncToCloud.call(this);
+};
+
+window.addEventListener('online', updateOfflineStatus);
+window.addEventListener('offline', updateOfflineStatus);
+
+// Load offline queue on init
+(function(){
+  offlineQueue = JSON.parse(localStorage.getItem('oil_offline_queue') || '[]');
+  updateOfflineStatus();
+})();
+
 // ===== DRAG =====
 let drag={el:null,ox:0,oy:0,sx:0,sy:0};
 
@@ -1586,6 +1863,10 @@ window.onload=function(){
   loadGitHubToken();
   checkCloudConnection();
   loadTheme();
+  applyI18n();
+  renderMaintNotes();
+  const draft = localStorage.getItem('oil_maint_draft');
+  if(draft) document.getElementById('maintMemo').value = draft;
   showPage('production');
   
   // 启动自动功能
@@ -1615,5 +1896,40 @@ window.onload=function(){
 };
 
 </script>
+
+
+<!-- RECIPE MANAGEMENT PAGE -->
+<div id="pageRecipe" class="tab-content">
+<h2 data-i18n="recipe">配方管理</h2>
+<div class="panel">
+<div class="form-row">
+<div class="form-group"><label>配方名称</label><input type="text" id="recipeName" placeholder="如: CNT标准工艺"></div>
+<div class="form-group"><label>配方描述</label><input type="text" id="recipeDesc" placeholder="简要说明"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>目标温度(°C)</label><input type="number" id="recipeTemp" placeholder="500"></div>
+<div class="form-group"><label>保温时长(min)</label><input type="number" id="recipeDuration" placeholder="60"></div>
+</div>
+<div class="form-row">
+<div class="form-group"><label>换气次数</label><input type="number" id="recipeExchanges" placeholder="3"></div>
+<div class="form-group"><label>版本</label><input type="text" id="recipeVersion" value="V1.0"></div>
+</div>
+<button class="btn btn-start" onclick="saveRecipe()" style="width:100%;margin-top:8px">保存配方</button>
+</div>
+<div class="panel">
+<h3>已保存配方</h3>
+<div id="recipeList"><div style="color:#888;text-align:center;padding:20px">暂无配方</div></div>
+</div>
+<div class="panel" id="recipeVersionPanel" style="display:none">
+<h3 id="recipeVerTitle">版本管理</h3>
+<div id="recipeVersionList"></div>
+</div>
+</div>
+
+<div class="shortcut-bar" id="shortcutBar">
+<span><span class="shortcut-key">Ctrl+S</span> 保存</span>
+<span><span class="shortcut-key">Ctrl+E</span> 导出</span>
+<span><span class="shortcut-key">F1</span> 帮助</span>
+</div>
 </body>
 </html>
