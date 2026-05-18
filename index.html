@@ -1,4 +1,4 @@
-﻿﻿﻿﻿\uFEFF<!DOCTYPE html>
+﻿﻿﻿﻿﻿\uFEFF<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -1538,6 +1538,7 @@ function recordMaintenance(equipment){
 // ===== DRAG (STABLE VERSION) =====
 // 用transform实现拖拽，不改变position
 let dragState={el:null,ox:0,oy:0,tx:0,ty:0};
+const GRID=10; // 对齐网格
 
 function makeDraggable(el){
   el.style.cursor='grab';
@@ -1561,8 +1562,12 @@ function initDrag(){
   document.addEventListener('mouseup',()=>{
     if(dragState.el){
       dragState.el.style.cursor='grab';dragState.el.style.zIndex='';
+      // 自动对齐
+      let nx=Math.round((dragState.tx+parseInt(dragState.el.style.transform.replace(/.*translate\(/,'').replace(/\)/,'').split(',')[0]))/GRID)*GRID;
+      let ny=Math.round((dragState.ty+parseInt(dragState.el.style.transform.replace(/.*translate\(/,'').replace(/\)/,'').split(',')[1]))/GRID)*GRID;
       const key='oil_drag_'+dragState.el.className.split(' ')[0];
-      localStorage.setItem(key,dragState.el.style.transform);
+      localStorage.setItem(key,`translate(${nx}px,${ny}px)`);
+      dragState.el.style.transform=`translate(${nx}px,${ny}px)`;
       dragState.el=null;
     }
   });
