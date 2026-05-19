@@ -316,7 +316,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <div class="form-group"><label>终点温度 (C)</label><input type="number" id="stage1TargetTemp" step="0.1" placeholder="500" oninput="updateTempDisplay()"></div>
 <div class="form-group"><label>加热功率 (KW)</label><input type="number" id="stage1Power" class="readonly-power" step="0.1" placeholder="50" readonly></div><div class="form-group"><label>占空比</label><input type="number" id="stage1Duty" step="0.01" value="1" min="0" max="1" oninput="updateStage1Power()"></div>
 <div class="form-group"><label>电流 (A)</label><input type="number" id="stage1Current" step="0.1" placeholder="110" oninput="updateStage1Power()"></div>
-<div class="form-group"><label>频率 (Hz)</label><input type="number" id="stage1Freq" step="0.1" placeholder="10.5"></div>
+<div class="form-group"><label>频率 (Hz)</label><input type="number" id="stage1Freq" step="0.1" placeholder="10.5"></div><div class="form-group"><label>压力 (MPa)</label><input type="number" id="stage1Pressure" step="0.01" placeholder="0.00" min="0" max="10"></div>
 <div class="data-row"><span class="data-label">实时功率:</span><span class="data-value" id="stage1Pwr">-- KW</span></div>
 <div class="data-row"><span class="data-label">累计能耗:</span><span class="data-value hl" id="stage1En">-- KWh</span></div>
 <div class="data-row"><span class="data-label">实时能耗:</span><span class="data-value" id="stage1LiveEn" style="color:#17a2b8">-- KWh</span></div>
@@ -335,7 +335,7 @@ h3{color:#7fc8a9;font-size:13px;margin:6px 0 4px}
 <div class="stage-status idle" id="stage2Status">未开始</div>
 <div class="timer" id="stage2Timer">00:00:00</div>
 <div class="form-group"><label>保温功率 (KW)</label><input type="number" id="stage2Power" class="readonly-power" step="0.1" placeholder="输入保温功率" readonly></div><div class="form-group"><label>电流 (A)</label><input type="number" id="stage2Current" step="0.1" value="110" placeholder="110" oninput="updateStage2Power()"></div><div class="form-group"><label>占空比</label><input type="number" id="stage2Duty" step="0.01" value="1" min="0" max="1" oninput="updateStage2Power()"></div>
-<div class="form-group"><label>保温温度 (C)</label><input type="number" id="stage2HoldTemp" step="0.1" placeholder="420"></div>
+<div class="form-group"><label>保温温度 (C)</label><input type="number" id="stage2HoldTemp" step="0.1" placeholder="420"></div><div class="form-group"><label>压力 (MPa)</label><input type="number" id="stage2Pressure" step="0.01" placeholder="0.00" min="0" max="10"></div>
 <div class="form-row">
 <div class="form-group"><label>上温度 (C)</label><input type="number" id="stage2UpperTemp" step="0.1" placeholder="0" oninput="updateStage2Diff()"></div>
 <div class="form-group"><label>下温度 (C)</label><input type="number" id="stage2LowerTemp" step="0.1" placeholder="0" oninput="updateStage2Diff()"></div>
